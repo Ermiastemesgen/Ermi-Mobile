@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .result { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Admin API Test</h1>
+    
+    <button onclick="testUsers()">Test Users API</button>
+    <button onclick="testProducts()">Test Products API</button>
+    <button onclick="testOrders()">Test Orders API</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        const resultsDiv = document.getElementById('results');
+
+        async function testUsers() {
+            try {
+                const response = await fetch(API_URL + '/admin/users');
+                const data = await response.json();
+                resultsDiv.innerHTML += '<div class="result"><strong>Users:</strong><pre>' + JSON.stringify(data, null, 2) + '</pre></div>';
+            } catch (error) {
+                resultsDiv.innerHTML += '<div class="result" style="background: #ffcccc;"><strong>Error:</strong> ' + error.message + '</div>';
+            }
+        }
+
+        async function testProducts() {
+            try {
+                const response = await fetch(API_URL + '/products');
+                const data = await response.json();
+                resultsDiv.innerHTML += '<div class="result"><strong>Products:</strong><pre>' + JSON.stringify(data, null, 2) + '</pre></div>';
+            } catch (error) {
+                resultsDiv.innerHTML += '<div class="result" style="background: #ffcccc;"><strong>Error:</strong> ' + error.message + '</div>';
+            }
+        }
+
+        async function testOrders() {
+            try {
+                const response = await fetch(API_URL + '/admin/orders');
+                const data = await response.json();
+                resultsDiv.innerHTML += '<div class="result"><strong>Orders:</strong><pre>' + JSON.stringify(data, null, 2) + '</pre></div>';
+            } catch (error) {
+                resultsDiv.innerHTML += '<div class="result" style="background: #ffcccc;"><strong>Error:</strong> ' + error.message + '</div>';
+            }
+        }
+    </script>
+</body>
+</html>

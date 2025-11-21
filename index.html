@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ermi Mobile - Quality Mobile Accessories</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;600;700&family=Lato:wght@300;400;700&family=Montserrat:wght@300;400;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header & Navigation -->
+    <header>
+        <nav class="navbar">
+            <div class="container">
+                <a href="/" class="logo" style="text-decoration: none; color: inherit;">
+                    <i class="fas fa-mobile-alt"></i>
+                    <span id="siteName">Ermi Mobile</span>
+                </a>
+                <ul class="nav-menu">
+                    <li><a href="#home" class="nav-link">Home</a></li>
+                    <li><a href="#products" class="nav-link">Products</a></li>
+                    <li><a href="#about" class="nav-link">About</a></li>
+                    <li><a href="#contact" class="nav-link">Contact</a></li>
+                </ul>
+                <div class="header-actions">
+                    <a href="tel:+251912345678" class="phone-icon" title="Call us">
+                        <i class="fas fa-phone"></i>
+                    </a>
+                    <button class="login-button" id="loginButton">
+                        <i class="fas fa-user"></i> Login
+                    </button>
+                    <div class="cart-icon" id="cartIcon">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-count" id="cartCount">0</span>
+                    </div>
+                </div>
+                <div class="hamburger" id="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title" id="heroTitle">Quality Mobile Accessories</h1>
+            <p class="hero-subtitle" id="heroSubtitle">Best prices on chargers, headphones, cases, and more.</p>
+            <a href="#products" class="cta-button" id="heroButton">Shop Now</a>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section id="products" class="products">
+        <div class="container">
+            <h2 class="section-title">Our Products</h2>
+            <div class="search-container">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search products...">
+                <button class="search-button" id="searchButton">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+            <div class="category-filter" id="categoryFilter">
+                <button class="filter-btn active" data-category="all">All Products</button>
+            </div>
+            <div class="products-grid" id="productsGrid">
+                <!-- Products will be dynamically loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <h2 class="section-title">About Ermi Mobile</h2>
+            <p class="about-text" id="aboutText">
+                Welcome to Ermi Mobile, your one-stop destination for premium mobile accessories. 
+                We pride ourselves on offering high-quality products at competitive prices. 
+                From the latest wireless earbuds to durable phone cases and fast chargers, 
+                we have everything you need to enhance your mobile experience. Our commitment 
+                to customer satisfaction and product excellence has made us a trusted name 
+                in mobile accessories. Shop with confidence and discover the perfect accessories 
+                for your devices today!
+            </p>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2 class="section-title">Contact Us</h2>
+            <form class="contact-form" id="contactForm">
+                <div class="form-group">
+                    <input type="text" id="name" placeholder="Your Name" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="email" placeholder="Your Email" required>
+                </div>
+                <div class="form-group">
+                    <textarea id="message" rows="5" placeholder="Your Message" required></textarea>
+                </div>
+                <button type="submit" class="submit-button">Send Message</button>
+            </form>
+            <div class="form-message" id="formMessage"></div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 ERMI MOBILE | All Rights Reserved</p>
+            <div class="social-icons">
+                <a href="#" id="socialFacebook" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+                <a href="#" id="socialInstagram" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="#" id="socialTiktok" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+                <a href="#" id="socialTelegram" aria-label="Telegram"><i class="fab fa-telegram"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Shopping Cart Popup -->
+    <div class="cart-popup" id="cartPopup">
+        <div class="cart-header">
+            <h3>Shopping Cart</h3>
+            <button class="close-cart" id="closeCart">&times;</button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <!-- Cart items will be displayed here -->
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cartTotal">0.00 Birr</span>
+            </div>
+            <button class="checkout-button">Checkout</button>
+        </div>
+    </div>
+
+    <!-- Cart Overlay -->
+    <div class="cart-overlay" id="cartOverlay"></div>
+
+    <!-- Login Modal -->
+    <div class="login-modal" id="loginModal">
+        <div class="login-content">
+            <button class="close-modal" id="closeModal">&times;</button>
+            <h2>Welcome Back!</h2>
+            <form class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">
+                        <i class="fas fa-envelope"></i> Email
+                    </label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">
+                        <i class="fas fa-lock"></i> Password
+                    </label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="login-submit">Login</button>
+            </form>
+            <p class="login-footer">Don't have an account? <a href="#" id="signupLink">Sign up</a></p>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div class="login-modal" id="signupModal">
+        <div class="login-content">
+            <button class="close-modal" id="closeSignupModal">&times;</button>
+            <h2>Create Account</h2>
+            <form class="login-form" id="signupForm">
+                <div class="form-group">
+                    <label for="signupName">
+                        <i class="fas fa-user"></i> Full Name
+                    </label>
+                    <input type="text" id="signupName" placeholder="Enter your name" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupEmail">
+                        <i class="fas fa-envelope"></i> Email
+                    </label>
+                    <input type="email" id="signupEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">
+                        <i class="fas fa-lock"></i> Password
+                    </label>
+                    <input type="password" id="signupPassword" placeholder="Create a password" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="signupConfirmPassword">
+                        <i class="fas fa-lock"></i> Confirm Password
+                    </label>
+                    <input type="password" id="signupConfirmPassword" placeholder="Confirm your password" required minlength="6">
+                </div>
+                <button type="submit" class="login-submit">Sign Up</button>
+            </form>
+            <p class="login-footer">Already have an account? <a href="#" id="loginLink">Login</a></p>
+        </div>
+    </div>
+
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="loginOverlay"></div>
+
+    <!-- Signup Modal -->
+    <div class="login-modal" id="signupModal">
+        <div class="login-content">
+            <button class="close-modal" id="closeSignupModal">&times;</button>
+            <h2>Create Account</h2>
+            <form class="login-form" id="signupForm">
+                <div class="form-group">
+                    <label for="signupName">
+                        <i class="fas fa-user"></i> Full Name
+                    </label>
+                    <input type="text" id="signupName" placeholder="Enter your name" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupEmail">
+                        <i class="fas fa-envelope"></i> Email
+                    </label>
+                    <input type="email" id="signupEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">
+                        <i class="fas fa-lock"></i> Password
+                    </label>
+                    <input type="password" id="signupPassword" placeholder="Create a password" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupPasswordConfirm">
+                        <i class="fas fa-lock"></i> Confirm Password
+                    </label>
+                    <input type="password" id="signupPasswordConfirm" placeholder="Confirm your password" required>
+                </div>
+                <button type="submit" class="login-submit">Create Account</button>
+            </form>
+            <p class="login-footer">Already have an account? <a href="#" id="loginLink">Login</a></p>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div class="login-modal" id="checkoutModal">
+        <div class="login-content" style="max-width: 550px; max-height: 85vh; overflow-y: auto;">
+            <button class="close-modal" id="closeCheckoutModal">&times;</button>
+            <h2>Checkout</h2>
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: #1f2937;">Order Summary</h3>
+                <div id="checkoutSummary" style="background: #f9fafb; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.75rem; max-height: 150px; overflow-y: auto;">
+                    <!-- Order items will be displayed here -->
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; padding: 0.5rem 0; border-top: 2px solid #e5e7eb;">
+                    <span>Total:</span>
+                    <span id="checkoutTotal">0.00 Birr</span>
+                </div>
+            </div>
+            <!-- Step 1: Payment Method Selection -->
+            <div id="checkoutStep1">
+                <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: #1f2937;">Select Payment Method</h3>
+                <div class="payment-methods">
+                    <label class="payment-option">
+                        <input type="radio" name="paymentMethod" value="telebirr" checked>
+                        <div class="payment-card">
+                            <i class="fas fa-mobile-alt" style="font-size: 2rem; color: #f59e0b;"></i>
+                            <span>Telebirr</span>
+                        </div>
+                    </label>
+                    <label class="payment-option">
+                        <input type="radio" name="paymentMethod" value="cbe">
+                        <div class="payment-card">
+                            <i class="fas fa-university" style="font-size: 2rem; color: #3b82f6;"></i>
+                            <span>CBE Birr</span>
+                        </div>
+                    </label>
+                    <label class="payment-option">
+                        <input type="radio" name="paymentMethod" value="bank">
+                        <div class="payment-card">
+                            <i class="fas fa-credit-card" style="font-size: 2rem; color: #8b5cf6;"></i>
+                            <span>Bank Transfer</span>
+                        </div>
+                    </label>
+                </div>
+                <button type="button" class="login-submit" id="continueToPayment" style="margin-top: 1.5rem;">
+                    Continue <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <!-- Step 2: Payment Information & Delivery Details -->
+            <form class="login-form" id="checkoutForm" style="display: none;">
+                <button type="button" class="back-button" id="backToPaymentMethod" style="background: none; border: none; color: #2563eb; cursor: pointer; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-arrow-left"></i> Back to Payment Method
+                </button>
+                
+                <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: #1f2937;">Payment Information</h3>
+                
+                <!-- Payment Info Display -->
+                <div id="paymentInfo" style="background: #f0f9ff; border: 2px solid #3b82f6; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                    <!-- Payment details will be shown here -->
+                </div>
+
+                <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: #1f2937;">Payment Proof</h3>
+                <div class="form-group">
+                    <label for="paymentReceipt">
+                        <i class="fas fa-receipt"></i> Upload Payment Receipt/Screenshot
+                    </label>
+                    <input type="file" id="paymentReceipt" accept="image/*" required style="width: 100%; padding: 0.75rem; border: 2px dashed #e5e7eb; border-radius: 8px; cursor: pointer;">
+                    <small style="color: #666; display: block; margin-top: 0.5rem;">
+                        <i class="fas fa-info-circle"></i> Please upload a screenshot or photo of your payment transaction
+                    </small>
+                    <div id="receiptPreview" style="margin-top: 1rem;"></div>
+                </div>
+
+                <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: #1f2937;">Delivery Details</h3>
+                <div class="form-group">
+                    <label for="addressLine">
+                        <i class="fas fa-map-marker-alt"></i> Address Line
+                    </label>
+                    <input type="text" id="addressLine" placeholder="Street address, building, apartment" required>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="city">
+                            <i class="fas fa-city"></i> City
+                        </label>
+                        <input type="text" id="city" placeholder="City" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="town">
+                            <i class="fas fa-map-pin"></i> Town/District
+                        </label>
+                        <input type="text" id="town" placeholder="Town or District" required>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="postalCode">
+                            <i class="fas fa-mail-bulk"></i> Postal Code
+                        </label>
+                        <input type="text" id="postalCode" placeholder="Postal Code">
+                    </div>
+                    <div class="form-group">
+                        <label for="phoneNumber">
+                            <i class="fas fa-phone"></i> Phone Number
+                        </label>
+                        <input type="tel" id="phoneNumber" placeholder="Phone number" required>
+                    </div>
+                </div>
+                <button type="submit" class="login-submit">
+                    <i class="fas fa-check-circle"></i> Confirm Order
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

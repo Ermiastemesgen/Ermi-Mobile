@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Email Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #2563eb;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        .message {
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            display: none;
+        }
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+        .info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+        .section {
+            margin-bottom: 40px;
+            padding-bottom: 40px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .section:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="text-align: center; color: #1f2937;">Email Verification Test</h1>
+        
+        <!-- Register Section -->
+        <div class="section">
+            <h2>1. Register New User</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label>Name:</label>
+                    <input type="text" id="regName" required>
+                </div>
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" id="regEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" id="regPassword" required>
+                </div>
+                <button type="submit">Register</button>
+            </form>
+            <div id="registerMessage" class="message"></div>
+        </div>
+
+        <!-- Login Section -->
+        <div class="section">
+            <h2>2. Try to Login (Before Verification)</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit">Login</button>
+            </form>
+            <div id="loginMessage" class="message"></div>
+        </div>
+
+        <!-- Resend Verification -->
+        <div class="section">
+            <h2>3. Resend Verification Email</h2>
+            <form id="resendForm">
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" id="resendEmail" required>
+                </div>
+                <button type="submit">Resend Verification</button>
+            </form>
+            <div id="resendMessage" class="message"></div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="section">
+            <h2>📝 Instructions</h2>
+            <ol style="line-height: 1.8;">
+                <li>Register a new user above</li>
+                <li>Check the <strong>server console</strong> for the verification link</li>
+                <li>Copy the verification link and open it in a new tab</li>
+                <li>Come back and try to login</li>
+                <li>Login should now work!</li>
+            </ol>
+            <div class="message info" style="display: block; margin-top: 20px;">
+                <strong>💡 Development Mode:</strong> Verification links are printed to the server console instead of being emailed.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = 'http://localhost:3000/api';
+
+        // Register Form
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = document.getElementById('registerMessage');
+            
+            const data = {
+                name: document.getElementById('regName').value,
+                email: document.getElementById('regEmail').value,
+                password: document.getElementById('regPassword').value
+            };
+
+            try {
+                const response = await fetch(`${API}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    message.className = 'message success';
+                    message.textContent = result.message + ' Check the server console for the verification link!';
+                    message.style.display = 'block';
+                    document.getElementById('registerForm').reset();
+                } else {
+                    message.className = 'message error';
+                    message.textContent = result.error;
+                    message.style.display = 'block';
+                }
+            } catch (error) {
+                message.className = 'message error';
+                message.textContent = 'Error: ' + error.message;
+                message.style.display = 'block';
+            }
+        });
+
+        // Login Form
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = document.getElementById('loginMessage');
+            
+            const data = {
+                email: document.getElementById('loginEmail').value,
+                password: document.getElementById('loginPassword').value
+            };
+
+            try {
+                const response = await fetch(`${API}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    message.className = 'message success';
+                    message.textContent = '✅ Login successful! Welcome ' + result.user.name;
+                    message.style.display = 'block';
+                } else {
+                    message.className = 'message error';
+                    message.textContent = result.error;
+                    message.style.display = 'block';
+                }
+            } catch (error) {
+                message.className = 'message error';
+                message.textContent = 'Error: ' + error.message;
+                message.style.display = 'block';
+            }
+        });
+
+        // Resend Verification Form
+        document.getElementById('resendForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = document.getElementById('resendMessage');
+            
+            const data = {
+                email: document.getElementById('resendEmail').value
+            };
+
+            try {
+                const response = await fetch(`${API}/resend-verification`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    message.className = 'message success';
+                    message.textContent = result.message + ' Check the server console!';
+                    message.style.display = 'block';
+                } else {
+                    message.className = 'message error';
+                    message.textContent = result.error;
+                    message.style.display = 'block';
+                }
+            } catch (error) {
+                message.className = 'message error';
+                message.textContent = 'Error: ' + error.message;
+                message.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
