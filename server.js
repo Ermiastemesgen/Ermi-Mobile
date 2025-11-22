@@ -1180,6 +1180,41 @@ app.delete('/api/admin/users/:id', (req, res) => {
     });
 });
 
+// Change user role (admin only)
+app.put('/api/admin/users/:id/role', (req, res) => {
+    const userId = req.params.id;
+    const { role } = req.body;
+    
+    // Validate role
+    if (!role || !['user', 'admin'].includes(role)) {
+        return res.status(400).json({ error: 'Invalid role. Must be "user" or "admin"' });
+    }
+    
+    // Check if user exists
+    db.get('SELECT id, name, email FROM users WHERE id = ?', [userId], (err, user) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        // Update user role
+        db.run('UPDATE users SET role = ? WHERE id = ?', [role, userId], function(err) {
+            if (err) {
+                res.status(500).json({ error: err.message });
+            } else {
+                res.json({ 
+                    message: 'User role updated successfully', 
+                    userId: userId,
+                    newRole: role 
+                });
+            }
+        });
+    });
+});
+
 // Get all orders (admin only)
 app.get('/api/admin/orders', (req, res) => {
     db.all('SELECT * FROM orders ORDER BY created_at DESC', [], (err, rows) => {

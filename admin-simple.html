@@ -1177,7 +1177,10 @@
                         <td>${user.email}</td>
                         <td><span class="badge ${user.role}">${user.role}</span></td>
                         <td>${new Date(user.created_at).toLocaleDateString()}</td>
-                        <td>
+                        <td style="white-space: nowrap;">
+                            <button onclick="changeUserRole(${user.id}, '${user.name}', '${user.role}')" class="btn-primary" style="padding: 5px 10px; font-size: 12px; margin-right: 5px;">
+                                ${user.role === 'admin' ? 'Make User' : 'Make Admin'}
+                            </button>
                             ${user.role !== 'admin' ? 
                                 `<button onclick="deleteUser(${user.id}, '${user.name}')" class="btn-danger" style="padding: 5px 10px; font-size: 12px;">Delete</button>` : 
                                 '<span style="color: #999; font-size: 12px;">Protected</span>'
@@ -1187,6 +1190,33 @@
                 `).join('');
             } catch (error) {
                 console.error('Error loading users:', error);
+            }
+        }
+
+        async function changeUserRole(userId, userName, currentRole) {
+            const newRole = currentRole === 'admin' ? 'user' : 'admin';
+            const action = newRole === 'admin' ? 'promote to Admin' : 'demote to User';
+            
+            if (!confirm(`Are you sure you want to ${action} "${userName}"?`)) return;
+            
+            try {
+                const response = await fetch(API + '/admin/users/' + userId + '/role', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ role: newRole })
+                });
+                
+                if (response.ok) {
+                    alert(`User role changed to ${newRole} successfully!`);
+                    loadUsers();
+                    loadStats();
+                } else {
+                    const error = await response.json();
+                    alert('Failed to change role: ' + (error.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error changing role:', error);
+                alert('Error: ' + error.message);
             }
         }
 
