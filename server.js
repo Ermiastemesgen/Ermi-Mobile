@@ -1151,6 +1151,35 @@ app.get('/api/admin/users', (req, res) => {
     });
 });
 
+// Delete user (admin only)
+app.delete('/api/admin/users/:id', (req, res) => {
+    const userId = req.params.id;
+    
+    // First check if user is admin (prevent deleting admin users)
+    db.get('SELECT role FROM users WHERE id = ?', [userId], (err, user) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        if (user.role === 'admin') {
+            return res.status(403).json({ error: 'Cannot delete admin users' });
+        }
+        
+        // Delete the user
+        db.run('DELETE FROM users WHERE id = ?', [userId], function(err) {
+            if (err) {
+                res.status(500).json({ error: err.message });
+            } else {
+                res.json({ message: 'User deleted successfully', deletedId: userId });
+            }
+        });
+    });
+});
+
 // Get all orders (admin only)
 app.get('/api/admin/orders', (req, res) => {
     db.all('SELECT * FROM orders ORDER BY created_at DESC', [], (err, rows) => {

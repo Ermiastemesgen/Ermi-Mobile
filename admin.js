@@ -91,16 +91,44 @@ async function loadUsers() {
                     <td>${user.email}</td>
                     <td><span class="role-badge role-${user.role}">${user.role}</span></td>
                     <td>${new Date(user.created_at).toLocaleDateString()}</td>
+                    <td>
+                        ${user.role !== 'admin' ? 
+                            `<button onclick="deleteUser(${user.id}, '${user.name}')" class="btn-small btn-danger">Delete</button>` : 
+                            '<span style="color: #6b7280; font-size: 0.85rem;">Protected</span>'
+                        }
+                    </td>
                 </tr>
             `).join('');
             console.log('Users table updated');
         } else {
-            tbody.innerHTML = '<tr><td colspan="5">No users found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6">No users found</td></tr>';
         }
     } catch (error) {
         console.error('Error loading users:', error);
         document.getElementById('usersTableBody').innerHTML = 
-            '<tr><td colspan="5">Error: ' + error.message + '</td></tr>';
+            '<tr><td colspan="6">Error: ' + error.message + '</td></tr>';
+    }
+}
+
+async function deleteUser(userId, userName) {
+    if (!confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) return;
+    
+    try {
+        const response = await fetch(`${API_URL}/admin/users/${userId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            alert('User deleted successfully!');
+            loadUsers();
+            loadDashboard(); // Refresh stats
+        } else {
+            const error = await response.json();
+            alert('Failed to delete user: ' + (error.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        alert('Error: ' + error.message);
     }
 }
 
