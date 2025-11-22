@@ -1241,11 +1241,15 @@ app.post('/api/admin/products/:id/upload-multiple', upload.array('images', 10), 
                         }
                         
                         console.log('✅ Images saved to database');
+                        console.log('📸 Product image updated:', allImagePaths[0]);
+                        console.log('📦 Total images for product:', allImagePaths.length);
+                        
                         res.json({
                             success: true,
                             message: `${newImagePaths.length} images uploaded successfully`,
                             imagePaths: newImagePaths,
-                            totalImages: allImagePaths.length
+                            totalImages: allImagePaths.length,
+                            mainImage: allImagePaths[0]
                         });
                     });
             });
