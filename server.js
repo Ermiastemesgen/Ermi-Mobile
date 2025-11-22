@@ -270,7 +270,7 @@ function initializeDatabase() {
             console.error('Error creating products table:', err.message);
         } else {
             console.log('✅ Products table ready');
-            insertDefaultProducts();
+            console.log('ℹ️  Auto-seeding disabled - add products manually via admin panel');
         }
     });
 
