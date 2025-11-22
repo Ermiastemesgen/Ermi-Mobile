@@ -362,6 +362,52 @@ function initializeDatabase() {
             console.error('Error adding verification_token_expires column:', err.message);
         }
     });
+
+    // Sync existing product images to product_images table
+    setTimeout(() => {
+        syncProductImages();
+    }, 1000);
+}
+
+// ===== Sync Product Images =====
+function syncProductImages() {
+    db.all('SELECT id, image FROM products WHERE image IS NOT NULL AND image != ""', [], (err, products) => {
+        if (err) {
+            console.error('❌ Error syncing product images:', err.message);
+            return;
+        }
+
+        if (products.length === 0) {
+            return;
+        }
+
+        let synced = 0;
+        products.forEach((product) => {
+            // Check if this product already has images in product_images table
+            db.get('SELECT COUNT(*) as count FROM product_images WHERE product_id = ?', [product.id], (err, row) => {
+                if (err || row.count > 0) {
+                    return; // Skip if error or already has images
+                }
+
+                // Insert the image into product_images table
+                db.run(
+                    'INSERT INTO product_images (product_id, image_url, display_order) VALUES (?, ?, ?)',
+                    [product.id, product.image, 0],
+                    (err) => {
+                        if (!err) {
+                            synced++;
+                        }
+                    }
+                );
+            });
+        });
+
+        if (synced > 0) {
+            setTimeout(() => {
+                console.log(`✅ Synced ${synced} product images to product_images table`);
+            }, 500);
+        }
+    });
 }
 
 // ===== Create Default Accounts =====
