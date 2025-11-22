@@ -1573,15 +1573,15 @@ app.post('/api/admin/products/:id/main-image', upload.single('image'), (req, res
     const imagePath = useCloudinary ? req.file.path : '/uploads/' + req.file.filename;
     console.log('✅ New main image:', imagePath);
 
-    // Update or insert as the first image
-    db.get('SELECT id FROM product_images WHERE product_id = ? AND is_main = 1', [id], (err, mainImage) => {
+    // Get the first image (display_order = 0) for this product
+    db.get('SELECT id FROM product_images WHERE product_id = ? ORDER BY display_order LIMIT 1', [id], (err, firstImage) => {
         if (err) {
             return res.status(500).json({ error: err.message });
         }
 
-        if (mainImage) {
-            // Update existing main image
-            db.run('UPDATE product_images SET image_url = ? WHERE id = ?', [imagePath, mainImage.id], (err) => {
+        if (firstImage) {
+            // Update existing first image
+            db.run('UPDATE product_images SET image_url = ? WHERE id = ?', [imagePath, firstImage.id], (err) => {
                 if (err) {
                     return res.status(500).json({ error: err.message });
                 }
@@ -1597,8 +1597,8 @@ app.post('/api/admin/products/:id/main-image', upload.single('image'), (req, res
                 });
             });
         } else {
-            // Insert new main image
-            db.run('INSERT INTO product_images (product_id, image_url, is_main, display_order) VALUES (?, ?, 1, 0)', 
+            // Insert new first image
+            db.run('INSERT INTO product_images (product_id, image_url, display_order) VALUES (?, ?, 0)', 
                 [id, imagePath], (err) => {
                     if (err) {
                         return res.status(500).json({ error: err.message });
