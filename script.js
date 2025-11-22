@@ -928,19 +928,33 @@ closeSignupModal.addEventListener('click', closeSignupModalFunc);
 signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const name = document.getElementById('signupName').value;
-    const email = document.getElementById('signupEmail').value;
+    const name = document.getElementById('signupName').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
     const password = document.getElementById('signupPassword').value;
     const passwordConfirm = document.getElementById('signupConfirmPassword').value;
+    
+    // Validate name
+    if (name.length < 2) {
+        showNotification('Please enter your full name', 'error');
+        return;
+    }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showNotification('Please enter a valid email address', 'error');
+        return;
+    }
+    
+    // Validate password length
+    if (password.length < 6) {
+        showNotification('Password must be at least 6 characters!', 'error');
+        return;
+    }
     
     // Validate passwords match
     if (password !== passwordConfirm) {
         showNotification('Passwords do not match!', 'error');
-        return;
-    }
-    
-    if (password.length < 6) {
-        showNotification('Password must be at least 6 characters!', 'error');
         return;
     }
     
@@ -956,12 +970,12 @@ signupForm.addEventListener('submit', async (e) => {
         const data = await response.json();
         
         if (response.ok) {
-            showNotification('Account created! Please check your email to verify your account.', 'success');
+            showNotification('Account created successfully! You can now login.', 'success');
             closeSignupModalFunc();
             signupForm.reset();
             
-            // Show verification message
-            alert('✅ Registration successful!\n\n📧 A verification email has been sent to ' + email + '\n\nPlease check your inbox and click the verification link to activate your account.\n\n💡 Check your spam folder if you don\'t see it.');
+            // Show success message
+            alert('✅ Registration successful!\n\nYou can now login with your credentials.');
             
             // Auto-fill login form
             document.getElementById('loginEmail').value = email;

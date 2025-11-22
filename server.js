@@ -739,6 +739,17 @@ app.post('/api/register', async (req, res) => {
         return res.status(400).json({ error: 'All fields are required' });
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: 'Please enter a valid email address' });
+    }
+
+    // Validate password length
+    if (password.length < 6) {
+        return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    }
+
     try {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
