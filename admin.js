@@ -121,16 +121,20 @@ async function loadProducts() {
                     <td>${product.price.toFixed(2)}</td>
                     <td><i class="fas ${product.icon}"></i></td>
                     <td>${product.stock || 100}</td>
+                    <td>
+                        <button onclick="editProduct(${product.id})" class="btn-small btn-primary">Edit</button>
+                        <button onclick="deleteProduct(${product.id})" class="btn-small btn-danger">Delete</button>
+                    </td>
                 </tr>
             `).join('');
             console.log('Products table updated');
         } else {
-            tbody.innerHTML = '<tr><td colspan="5">No products found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6">No products found</td></tr>';
         }
     } catch (error) {
         console.error('Error loading products:', error);
         document.getElementById('productsTableBody').innerHTML = 
-            '<tr><td colspan="5">Error: ' + error.message + '</td></tr>';
+            '<tr><td colspan="6">Error: ' + error.message + '</td></tr>';
     }
 }
 
@@ -238,6 +242,152 @@ async function deleteContact(id) {
         alert('Error: ' + error.message);
     }
 }
+
+// Product Management Functions
+async function editProduct(productId) {
+    try {
+        const response = await fetch(`${API_URL}/products/${productId}`);
+        const data = await response.json();
+        const product = data.product;
+        
+        document.getElementById('editProductId').value = product.id;
+        document.getElementById('editProductName').value = product.name;
+        document.getElementById('editProductPrice').value = product.price;
+        document.getElementById('editProductDescription').value = product.description || '';
+        document.getElementById('editProductStock').value = product.stock || 100;
+        
+        // Load product images
+        await loadProductImages(product.id);
+        
+        document.getElementById('editProductModal').style.display = 'block';
+    } catch (error) {
+        console.error('Error loading product:', error);
+        alert('Error loading product: ' + error.message);
+    }
+}
+
+async function loadProductImages(productId) {
+    try {
+        const response = await fetch(`${API_URL}/products/${productId}/images`);
+        const data = await response.json();
+        
+        const container = document.getElementById('productImagesContainer');
+        
+        if (data.images && data.images.length > 0) {
+            container.innerHTML = data.images.map(img => `
+                <div class="image-item">
+                    <img src="${img.image_url}" alt="Product image">
+                    <button type="button" class="delete-image-btn" onclick="deleteProductImage(${img.id})" title="Delete this image">×</button>
+                    ${img.is_main ? '<span class="main-badge">Main</span>' : ''}
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = '<p>No images available</p>';
+        }
+    } catch (error) {
+        console.error('Error loading images:', error);
+        document.getElementById('productImagesContainer').innerHTML = '<p>Error loading images</p>';
+    }
+}
+
+async function deleteProductImage(imageId) {
+    if (!confirm('Are you sure you want to delete this image?')) return;
+    
+    try {
+        const response = await fetch(`${API_URL}/admin/products/images/${imageId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            alert('Image deleted successfully!');
+            const productId = document.getElementById('editProductId').value;
+            await loadProductImages(productId);
+        } else {
+            const error = await response.json();
+            alert('Failed to delete image: ' + error.error);
+        }
+    } catch (error) {
+        console.error('Error deleting image:', error);
+        alert('Error: ' + error.message);
+    }
+}
+
+async function deleteProduct(productId) {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+    
+    try {
+        const response = await fetch(`${API_URL}/admin/products/${productId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            alert('Product deleted successfully!');
+            loadProducts();
+        } else {
+            alert('Failed to delete product');
+        }
+    } catch (error) {
+        console.error('Error deleting product:', error);
+        alert('Error: ' + error.message);
+    }
+}
+
+function closeEditModal() {
+    document.getElementById('editProductModal').style.display = 'none';
+}
+
+// Handle edit form submission
+document.addEventListener('DOMContentLoaded', () => {
+    const editForm = document.getElementById('editProductForm');
+    if (editForm) {
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const productId = document.getElementById('editProductId').value;
+            const productData = {
+                name: document.getElementById('editProductName').value,
+                price: parseFloat(document.getElementById('editProductPrice').value),
+                description: document.getElementById('editProductDescription').value,
+                stock: parseInt(document.getElementById('editProductStock').value)
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/admin/products/${productId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(productData)
+                });
+                
+                if (response.ok) {
+                    alert('Product updated successfully!');
+                    closeEditModal();
+                    loadProducts();
+                } else {
+                    alert('Failed to update product');
+                }
+            } catch (error) {
+                console.error('Error updating product:', error);
+                alert('Error: ' + error.message);
+            }
+        });
+    }
+    
+    // Close modal when clicking X or outside
+    const modal = document.getElementById('editProductModal');
+    const closeBtn = document.querySelector('.close');
+    
+    if (closeBtn) {
+        closeBtn.onclick = closeEditModal;
+    }
+    
+    if (modal) {
+        window.onclick = (event) => {
+            if (event.target === modal) {
+                closeEditModal();
+            }
+        };
+    }
+});
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
