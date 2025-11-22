@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Cloudinary Images</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2563eb;
+        }
+        .product {
+            border: 1px solid #e5e7eb;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            background: #f9fafb;
+        }
+        .product h3 {
+            margin-top: 0;
+            color: #1f2937;
+        }
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .image-item {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+        }
+        .image-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        .image-info {
+            padding: 10px;
+            font-size: 12px;
+            color: #6b7280;
+            word-break: break-all;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .status.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        pre {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px 10px 0;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ Cloudinary Image Test</h1>
+        <p>This page helps debug image upload and display issues.</p>
+        
+        <div>
+            <button onclick="checkCloudinaryStatus()">Check Cloudinary Status</button>
+            <button onclick="loadAllProducts()">Load All Products</button>
+            <button onclick="testImageLoad()">Test Image Loading</button>
+        </div>
+
+        <div id="status"></div>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API = window.location.origin;
+
+        async function checkCloudinaryStatus() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '<p>Checking Cloudinary configuration...</p>';
+
+            try {
+                // Try to get a product to see debug info
+                const response = await fetch(API + '/api/debug/products/1');
+                const data = await response.json();
+
+                let html = '<h2>Cloudinary Status</h2>';
+                
+                if (data.cloudinaryEnabled) {
+                    html += '<div class="status success">✅ Cloudinary is ENABLED</div>';
+                    html += '<p><strong>Cloud Name:</strong> ' + data.cloudinaryConfig.cloudName + '</p>';
+                } else {
+                    html += '<div class="status error">❌ Cloudinary is NOT configured</div>';
+                    html += '<p>Using local file storage (temporary on Render)</p>';
+                }
+
+                html += '<h3>Product Data:</h3>';
+                html += '<pre>' + JSON.stringify(data.product, null, 2) + '</pre>';
+                
+                html += '<h3>Product Images Table:</h3>';
+                html += '<pre>' + JSON.stringify(data.images, null, 2) + '</pre>';
+
+                statusDiv.innerHTML = html;
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status error">❌ Error: ' + error.message + '</div>';
+            }
+        }
+
+        async function loadAllProducts() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>Loading products...</p>';
+
+            try {
+                const response = await fetch(API + '/api/products');
+                const data = await response.json();
+
+                let html = '<h2>All Products (' + data.products.length + ')</h2>';
+
+                data.products.forEach(product => {
+                    html += '<div class="product">';
+                    html += '<h3>' + product.name + ' (ID: ' + product.id + ')</h3>';
+                    
+                    if (product.image) {
+                        html += '<div class="status success">✅ Has main image</div>';
+                        html += '<div class="image-grid">';
+                        html += '<div class="image-item">';
+                        html += '<img src="' + product.image + '" alt="' + product.name + '" onerror="this.parentElement.innerHTML=\'<div style=padding:20px;color:red>❌ Image failed to load</div>\'">';
+                        html += '<div class="image-info">Main Image:<br>' + product.image + '</div>';
+                        html += '</div>';
+                        html += '</div>';
+                    } else {
+                        html += '<div class="status warning">⚠️ No main image</div>';
+                    }
+
+                    if (product.images) {
+                        try {
+                            const images = JSON.parse(product.images);
+                            html += '<p><strong>Images array:</strong> ' + images.length + ' images</p>';
+                            html += '<div class="image-grid">';
+                            images.forEach((img, index) => {
+                                html += '<div class="image-item">';
+                                html += '<img src="' + img + '" alt="Image ' + (index + 1) + '" onerror="this.parentElement.innerHTML=\'<div style=padding:20px;color:red>❌ Failed</div>\'">';
+                                html += '<div class="image-info">Image ' + (index + 1) + ':<br>' + img + '</div>';
+                                html += '</div>';
+                            });
+                            html += '</div>';
+                        } catch (e) {
+                            html += '<p style="color: #ef4444;">Error parsing images: ' + e.message + '</p>';
+                        }
+                    }
+
+                    html += '</div>';
+                });
+
+                resultsDiv.innerHTML = html;
+            } catch (error) {
+                resultsDiv.innerHTML = '<div class="status error">❌ Error: ' + error.message + '</div>';
+            }
+        }
+
+        async function testImageLoad() {
+            const resultsDiv = document.getElementById('results');
+            
+            const testUrls = [
+                'https://res.cloudinary.com/demo/image/upload/sample.jpg',
+                '/uploads/test.jpg',
+                'https://via.placeholder.com/300'
+            ];
+
+            let html = '<h2>Image Loading Test</h2>';
+            html += '<div class="image-grid">';
+
+            testUrls.forEach(url => {
+                html += '<div class="image-item">';
+                html += '<img src="' + url + '" alt="Test" onerror="this.parentElement.innerHTML=\'<div style=padding:20px;color:red>❌ Failed to load</div>\'">';
+                html += '<div class="image-info">' + url + '</div>';
+                html += '</div>';
+            });
+
+            html += '</div>';
+            resultsDiv.innerHTML = html;
+        }
+
+        // Auto-load on page load
+        window.onload = () => {
+            checkCloudinaryStatus();
+            loadAllProducts();
+        };
+    </script>
+</body>
+</html>

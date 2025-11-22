@@ -1234,6 +1234,11 @@ app.post('/api/admin/products/:id/upload-multiple', upload.array('images', 10), 
     // Get image paths (Cloudinary URL or local path)
     const newImagePaths = req.files.map(file => {
         if (useCloudinary) {
+            console.log('☁️  Cloudinary file object:', {
+                path: file.path,
+                filename: file.filename,
+                originalname: file.originalname
+            });
             return file.path; // Cloudinary returns full URL in file.path
         } else {
             return '/uploads/' + file.filename; // Local path
@@ -1241,6 +1246,7 @@ app.post('/api/admin/products/:id/upload-multiple', upload.array('images', 10), 
     });
     console.log('✅ Files received:', req.files.length);
     console.log('📁 Storage type:', useCloudinary ? 'Cloudinary' : 'Local');
+    console.log('🖼️  Image paths:', newImagePaths);
 
     // Get existing images from product_images table
     db.all('SELECT image_url, display_order FROM product_images WHERE product_id = ? ORDER BY display_order', [id], (err, existingImages) => {
@@ -1527,6 +1533,33 @@ app.get('/seed-database-now', async (req, res) => {
     } catch (error) {
         res.status(500).send(`<h1>Error: ${error.message}</h1>`);
     }
+});
+
+// Debug endpoint to check product images
+app.get('/api/debug/products/:id', (req, res) => {
+    const { id } = req.params;
+    
+    db.get('SELECT * FROM products WHERE id = ?', [id], (err, product) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        
+        db.all('SELECT * FROM product_images WHERE product_id = ? ORDER BY display_order', [id], (err, images) => {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+            
+            res.json({
+                product: product,
+                images: images,
+                cloudinaryEnabled: useCloudinary,
+                cloudinaryConfig: useCloudinary ? {
+                    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+                    configured: true
+                } : null
+            });
+        });
+    });
 });
 
 // ===== Start Server =====
