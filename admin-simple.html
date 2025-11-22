@@ -1758,7 +1758,10 @@
                         <p style="font-size: 12px; color: ${index < 5 ? '#10b981' : '#999'}; font-weight: 600;">
                             ${index < 5 ? '✓ In Hero Slider' : 'Not in slider'}
                         </p>
-                        <p style="font-size: 11px; color: #666; margin-top: 5px;">Position: ${index + 1}</p>
+                        <p style="font-size: 11px; color: #666; margin: 5px 0;">Position: ${index + 1}</p>
+                        <button onclick="changeHeroImage(${product.id}, '${product.name}')" class="btn-primary" style="padding: 8px 15px; font-size: 12px; margin-top: 8px; width: 100%;">
+                            <i class="fas fa-image"></i> Change Image
+                        </button>
                     </div>
                 `).join('');
                 
@@ -1773,6 +1776,43 @@
             } catch (error) {
                 console.error('Error loading hero slider products:', error);
             }
+        }
+        
+        // Change hero slider image for a product
+        async function changeHeroImage(productId, productName) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                if (!confirm(`Upload new image for "${productName}"?`)) return;
+                
+                const formData = new FormData();
+                formData.append('image', file);
+                
+                try {
+                    const response = await fetch(API + '/admin/products/' + productId + '/main-image', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (response.ok) {
+                        alert('Image updated successfully! Hero slider will show the new image.');
+                        loadHeroSliderProducts();
+                    } else {
+                        const error = await response.json();
+                        alert('Failed to upload image: ' + (error.error || 'Unknown error'));
+                    }
+                } catch (error) {
+                    console.error('Error uploading image:', error);
+                    alert('Error: ' + error.message);
+                }
+            };
+            
+            input.click();
         }
         
         // Preview hero image before upload

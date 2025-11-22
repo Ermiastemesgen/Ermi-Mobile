@@ -1559,6 +1559,65 @@ app.post('/api/admin/products/:id/upload', upload.single('image'), (req, res) =>
     });
 });
 
+// Update product main image (replaces the main image)
+app.post('/api/admin/products/:id/main-image', upload.single('image'), (req, res) => {
+    const { id } = req.params;
+    
+    console.log('🖼️  Main image update request for product:', id);
+    
+    if (!req.file) {
+        console.log('❌ No file uploaded');
+        return res.status(400).json({ error: 'No image file uploaded' });
+    }
+
+    const imagePath = useCloudinary ? req.file.path : '/uploads/' + req.file.filename;
+    console.log('✅ New main image:', imagePath);
+
+    // Update or insert as the first image
+    db.get('SELECT id FROM product_images WHERE product_id = ? AND is_main = 1', [id], (err, mainImage) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+
+        if (mainImage) {
+            // Update existing main image
+            db.run('UPDATE product_images SET image_url = ? WHERE id = ?', [imagePath, mainImage.id], (err) => {
+                if (err) {
+                    return res.status(500).json({ error: err.message });
+                }
+                
+                // Update product table
+                db.run('UPDATE products SET image = ? WHERE id = ?', [imagePath, id], (err) => {
+                    if (err) {
+                        return res.status(500).json({ error: err.message });
+                    }
+                    
+                    console.log('✅ Main image updated for product:', id);
+                    res.json({ success: true, message: 'Main image updated successfully', imagePath });
+                });
+            });
+        } else {
+            // Insert new main image
+            db.run('INSERT INTO product_images (product_id, image_url, is_main, display_order) VALUES (?, ?, 1, 0)', 
+                [id, imagePath], (err) => {
+                    if (err) {
+                        return res.status(500).json({ error: err.message });
+                    }
+                    
+                    // Update product table
+                    db.run('UPDATE products SET image = ? WHERE id = ?', [imagePath, id], (err) => {
+                        if (err) {
+                            return res.status(500).json({ error: err.message });
+                        }
+                        
+                        console.log('✅ Main image added for product:', id);
+                        res.json({ success: true, message: 'Main image added successfully', imagePath });
+                    });
+                });
+        }
+    });
+});
+
 // Delete product (admin only)
 app.delete('/api/admin/products/:id', (req, res) => {
     const { id } = req.params;
