@@ -621,9 +621,18 @@
             // Display user info
             const roleColor = currentUser.role === 'admin' ? '#ef4444' : '#f59e0b';
             const roleIcon = currentUser.role === 'admin' ? '👑' : '✏️';
+            const roleBadge = currentUser.role === 'admin' ? 'Admin' : 'Editor';
             document.getElementById('currentUserInfo').innerHTML = `
-                ${roleIcon} <strong>${currentUser.name}</strong> 
-                <span style="color: ${roleColor};">(${currentUser.role})</span>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span>${roleIcon}</span>
+                    <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                        <strong style="font-size: 0.95rem;">${currentUser.name}</strong>
+                        <span style="font-size: 0.8rem; color: #9ca3af;">${currentUser.email}</span>
+                    </div>
+                    <span style="background: ${roleColor}; color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">
+                        ${roleBadge}
+                    </span>
+                </div>
             `;
             
             // Load data
