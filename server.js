@@ -748,10 +748,10 @@ app.post('/api/register', async (req, res) => {
         const verificationToken = crypto.randomBytes(32).toString('hex');
         const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-        // Insert user with verification token
+        // Insert user with auto-verification (email verification disabled due to SMTP issues)
         db.run(
-            'INSERT INTO users (name, email, password, role, email_verified, verification_token, verification_token_expires) VALUES (?, ?, ?, ?, 0, ?, ?)',
-            [name, email, hashedPassword, userRole, verificationToken, tokenExpires.toISOString()],
+            'INSERT INTO users (name, email, password, role, email_verified) VALUES (?, ?, ?, ?, 1)',
+            [name, email, hashedPassword, userRole],
             async function(err) {
                 if (err) {
                     if (err.message.includes('UNIQUE constraint failed')) {
@@ -760,14 +760,12 @@ app.post('/api/register', async (req, res) => {
                         res.status(500).json({ error: err.message });
                     }
                 } else {
-                    // Send verification email
-                    const emailSent = await sendVerificationEmail(email, verificationToken, name);
+                    console.log(`✅ New user registered and auto-verified: ${email}`);
                     
                     res.json({
                         success: true,
-                        message: 'Registration successful! Please check your email to verify your account.',
-                        userId: this.lastID,
-                        emailSent: emailSent
+                        message: 'Registration successful! You can now login.',
+                        userId: this.lastID
                     });
                 }
             }
@@ -795,14 +793,6 @@ app.post('/api/login', (req, res) => {
                 // Compare password
                 const match = await bcrypt.compare(password, user.password);
                 if (match) {
-                    // Check if email is verified
-                    if (!user.email_verified) {
-                        return res.status(403).json({ 
-                            error: 'Please verify your email before logging in. Check your inbox for the verification link.',
-                            emailNotVerified: true
-                        });
-                    }
-                    
                     res.json({
                         success: true,
                         message: 'Login successful',
