@@ -291,7 +291,7 @@ function displayProducts() {
         const productCard = document.createElement('div');
         productCard.className = 'product-card';
         productCard.innerHTML = `
-            <div class="product-image" onclick="filterByCategory(${product.category_id || 'null'})" style="cursor: pointer;" title="View ${product.category_name || 'all products'}">
+            <div class="product-image" ${product.image ? 'onclick="openLightbox(\'' + product.image + '\', \'' + product.name + '\')" style="cursor: zoom-in;"' : 'onclick="filterByCategory(' + (product.category_id || 'null') + ')" style="cursor: pointer;"'} title="${product.image ? 'Click to view full size' : 'View ' + (product.category_name || 'all products')}">
                 ${product.image ? 
                     '<img src="' + product.image + '" alt="' + product.name + '" style="width: 100%; height: 100%; object-fit: cover; image-rendering: high-quality;">' : 
                     '<i class="fas ' + product.icon + '"></i>'
@@ -309,6 +309,49 @@ function displayProducts() {
         productsGrid.appendChild(productCard);
     });
 }
+
+// ===== Image Lightbox Functions =====
+function openLightbox(imageSrc, productName) {
+    const lightbox = document.getElementById('imageLightbox');
+    const lightboxImg = document.getElementById('lightboxImage');
+    const caption = document.getElementById('lightboxCaption');
+    
+    lightbox.style.display = 'block';
+    lightboxImg.src = imageSrc;
+    caption.textContent = productName;
+    document.body.style.overflow = 'hidden'; // Prevent scrolling
+}
+
+function closeLightbox() {
+    const lightbox = document.getElementById('imageLightbox');
+    lightbox.style.display = 'none';
+    document.body.style.overflow = 'auto'; // Restore scrolling
+}
+
+// Close lightbox when clicking outside the image
+document.addEventListener('DOMContentLoaded', function() {
+    const lightbox = document.getElementById('imageLightbox');
+    const closeBtn = document.querySelector('.lightbox-close');
+    
+    if (closeBtn) {
+        closeBtn.onclick = closeLightbox;
+    }
+    
+    if (lightbox) {
+        lightbox.onclick = function(e) {
+            if (e.target === lightbox) {
+                closeLightbox();
+            }
+        };
+    }
+    
+    // Close on ESC key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeLightbox();
+        }
+    });
+});
 
 // ===== Add to Cart Function =====
 function addToCart(productId) {
