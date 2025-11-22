@@ -926,13 +926,17 @@ function updateLoginButton() {
     if (isLoggedIn) {
         const roleIcon = getRoleIcon(currentUser.role);
         const roleColor = getRoleColor(currentUser.role);
-        loginButton.innerHTML = `${roleIcon} ${currentUser.name} (${currentUser.role})`;
+        loginButton.innerHTML = `${roleIcon} ${currentUser.name}`;
         loginButton.classList.add('logged-in');
         loginButton.style.background = roleColor;
+        loginButton.onclick = () => window.location.href = '/profile.html';
+        loginButton.title = 'View Profile';
     } else {
         loginButton.innerHTML = `<i class="fas fa-user"></i> Login`;
         loginButton.classList.remove('logged-in');
         loginButton.style.background = '';
+        loginButton.onclick = openLoginModal;
+        loginButton.title = 'Login';
     }
 }
 
@@ -961,7 +965,7 @@ function getRoleColor(role) {
 }
 
 // ===== Event Listeners for Login =====
-loginButton.addEventListener('click', openLoginModal);
+// loginButton click is handled in updateLoginButton()
 closeModal.addEventListener('click', closeLoginModal);
 loginOverlay.addEventListener('click', closeLoginModal);
 loginForm.addEventListener('submit', handleLogin);

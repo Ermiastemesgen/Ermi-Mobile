@@ -876,6 +876,38 @@ app.post('/api/login', (req, res) => {
     });
 });
 
+// Update user profile
+app.put('/api/users/:id', (req, res) => {
+    const { id } = req.params;
+    const { name, email } = req.body;
+    
+    if (!name || !email) {
+        return res.status(400).json({ error: 'Name and email are required' });
+    }
+    
+    // Check if email is already taken by another user
+    db.get('SELECT id FROM users WHERE email = ? AND id != ?', [email, id], (err, existingUser) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        
+        if (existingUser) {
+            return res.status(400).json({ error: 'Email already in use' });
+        }
+        
+        // Update user
+        db.run('UPDATE users SET name = ?, email = ? WHERE id = ?', [name, email, id], function(err) {
+            if (err) {
+                res.status(500).json({ error: err.message });
+            } else if (this.changes === 0) {
+                res.status(404).json({ error: 'User not found' });
+            } else {
+                res.json({ success: true, message: 'Profile updated successfully' });
+            }
+        });
+    });
+});
+
 // Email verification endpoint
 app.get('/verify-email', (req, res) => {
     const { token } = req.query;
