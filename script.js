@@ -121,6 +121,7 @@ async function fetchProducts() {
         displayCategoryFilter(catData.categories);
         
         displayProducts();
+        initHeroSlider(); // Initialize hero slider with product images
     } catch (error) {
         console.error('Error fetching products:', error);
         showNotification('Error loading products. Please refresh the page.', 'error');
@@ -1166,6 +1167,99 @@ function checkUserSession() {
     // Load cart for current user (or guest)
     loadCart();
 }
+
+// ===== Hero Slider Functions =====
+let currentSlide = 0;
+let sliderInterval;
+
+function initHeroSlider() {
+    const slider = document.getElementById('heroSlider');
+    const dotsContainer = document.getElementById('sliderDots');
+    
+    if (!slider || !products || products.length === 0) return;
+    
+    // Get products with images (limit to 5 for performance)
+    const productsWithImages = products.filter(p => p.image).slice(0, 5);
+    
+    if (productsWithImages.length === 0) {
+        slider.innerHTML = '<div class="slide active" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>';
+        return;
+    }
+    
+    // Create slides
+    slider.innerHTML = productsWithImages.map((product, index) => `
+        <div class="slide ${index === 0 ? 'active' : ''}" style="background-image: url('${product.image}');">
+            <div class="slide-overlay"></div>
+        </div>
+    `).join('');
+    
+    // Create dots
+    dotsContainer.innerHTML = productsWithImages.map((_, index) => `
+        <span class="dot ${index === 0 ? 'active' : ''}" onclick="goToSlide(${index})"></span>
+    `).join('');
+    
+    // Auto-play slider
+    startSlider();
+}
+
+function changeSlide(direction) {
+    const slides = document.querySelectorAll('.slide');
+    const dots = document.querySelectorAll('.dot');
+    
+    if (slides.length === 0) return;
+    
+    slides[currentSlide].classList.remove('active');
+    dots[currentSlide].classList.remove('active');
+    
+    currentSlide = (currentSlide + direction + slides.length) % slides.length;
+    
+    slides[currentSlide].classList.add('active');
+    dots[currentSlide].classList.add('active');
+    
+    // Reset auto-play timer
+    stopSlider();
+    startSlider();
+}
+
+function goToSlide(index) {
+    const slides = document.querySelectorAll('.slide');
+    const dots = document.querySelectorAll('.dot');
+    
+    if (slides.length === 0) return;
+    
+    slides[currentSlide].classList.remove('active');
+    dots[currentSlide].classList.remove('active');
+    
+    currentSlide = index;
+    
+    slides[currentSlide].classList.add('active');
+    dots[currentSlide].classList.add('active');
+    
+    // Reset auto-play timer
+    stopSlider();
+    startSlider();
+}
+
+function startSlider() {
+    sliderInterval = setInterval(() => {
+        changeSlide(1);
+    }, 5000); // Change slide every 5 seconds
+}
+
+function stopSlider() {
+    if (sliderInterval) {
+        clearInterval(sliderInterval);
+    }
+}
+
+// Pause slider on hover
+document.addEventListener('DOMContentLoaded', () => {
+    const heroSection = document.querySelector('.hero');
+    if (heroSection) {
+        heroSection.addEventListener('mouseenter', stopSlider);
+        heroSection.addEventListener('mouseleave', startSlider);
+    }
+});
 
 // ===== Initialize on Page Load =====
 document.addEventListener('DOMContentLoaded', () => {

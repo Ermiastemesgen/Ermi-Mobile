@@ -49,8 +49,20 @@
         </nav>
     </header>
 
-    <!-- Hero Section -->
+    <!-- Hero Section with Product Carousel -->
     <section id="home" class="hero">
+        <div class="hero-slider">
+            <div class="slider-container" id="heroSlider">
+                <!-- Slides will be dynamically loaded -->
+            </div>
+            <button class="slider-btn prev" id="prevBtn" onclick="changeSlide(-1)">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="slider-btn next" id="nextBtn" onclick="changeSlide(1)">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            <div class="slider-dots" id="sliderDots"></div>
+        </div>
         <div class="hero-content">
             <h1 class="hero-title" id="heroTitle">Quality Mobile Accessories</h1>
             <p class="hero-subtitle" id="heroSubtitle">Best prices on chargers, headphones, cases, and more.</p>
