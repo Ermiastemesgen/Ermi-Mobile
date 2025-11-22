@@ -394,6 +394,22 @@ function initializeDatabase() {
         }
     });
 
+    // Add images column to products table if it doesn't exist
+    db.run(`ALTER TABLE products ADD COLUMN images TEXT`, (err) => {
+        if (err && !err.message.includes('duplicate column')) {
+            console.error('Error adding images column:', err.message);
+        } else if (!err) {
+            console.log('✅ Added images column to products table');
+        }
+    });
+
+    // Add category_id column to products table if it doesn't exist
+    db.run(`ALTER TABLE products ADD COLUMN category_id INTEGER`, (err) => {
+        if (err && !err.message.includes('duplicate column')) {
+            console.error('Error adding category_id column:', err.message);
+        }
+    });
+
     // Sync existing product images to product_images table
     setTimeout(() => {
         syncProductImages();
