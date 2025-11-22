@@ -500,36 +500,11 @@ async function createDefaultAccounts() {
 }
 
 // ===== Insert Default Products =====
+// DISABLED: Auto-seeding disabled - add products manually via admin panel
 function insertDefaultProducts() {
-    const products = [
-        { name: 'Wireless Earbuds Pro', price: 2500, icon: 'fa-headphones', stock: 50, description: 'Premium wireless earbuds with active noise cancellation and 24-hour battery life' },
-        { name: 'Protective Phone Case', price: 500, icon: 'fa-mobile-alt', stock: 100, description: 'Durable protective case with shock absorption for all phone models' },
-        { name: 'Fast Charger 20W', price: 800, icon: 'fa-charging-station', stock: 75, description: 'Quick charge adapter with USB-C port and smart charging technology' },
-        { name: 'Tempered Glass Screen Protector', price: 300, icon: 'fa-shield-alt', stock: 150, description: '9H hardness tempered glass with oleophobic coating' },
-        { name: 'Power Bank 10000mAh', price: 1800, icon: 'fa-battery-full', stock: 40, description: 'Portable power bank with dual USB ports and LED indicator' },
-        { name: 'USB-C Cable 2m', price: 400, icon: 'fa-plug', stock: 200, description: 'Durable braided USB-C charging cable with fast data transfer' },
-        { name: 'Car Phone Holder', price: 600, icon: 'fa-car', stock: 80, description: 'Universal car phone holder with 360° rotation and strong grip' },
-        { name: 'Bluetooth Speaker', price: 3500, icon: 'fa-volume-up', stock: 30, description: 'Portable Bluetooth speaker with deep bass and 12-hour playtime' },
-        { name: 'Selfie Stick with Tripod', price: 900, icon: 'fa-camera', stock: 60, description: 'Extendable selfie stick with built-in tripod and Bluetooth remote' },
-        { name: 'Phone Ring Holder', price: 250, icon: 'fa-ring', stock: 120, description: '360° rotating ring holder with magnetic car mount compatibility' },
-        { name: 'Wireless Charging Pad', price: 1200, icon: 'fa-wifi', stock: 45, description: 'Fast wireless charging pad compatible with all Qi-enabled devices' },
-        { name: 'AUX Audio Cable', price: 350, icon: 'fa-headphones-alt', stock: 90, description: '3.5mm auxiliary audio cable with gold-plated connectors' }
-    ];
-
-    db.get('SELECT COUNT(*) as count FROM products', (err, row) => {
-        if (err) {
-            console.error('Error checking products:', err.message);
-        } else if (row.count === 0) {
-            console.log('📦 Seeding database with sample products...');
-            const stmt = db.prepare('INSERT INTO products (name, price, icon, stock, description) VALUES (?, ?, ?, ?, ?)');
-            products.forEach(product => {
-                stmt.run(product.name, product.price, product.icon, product.stock, product.description);
-            });
-            stmt.finalize(() => {
-                console.log(`✅ ${products.length} products added automatically`);
-            });
-        }
-    });
+    // Automatic product seeding is disabled
+    // Add your own products via the admin panel
+    console.log('ℹ️  Auto-seeding disabled - add products manually via admin panel');
 }
 
 // ===== API Routes =====
