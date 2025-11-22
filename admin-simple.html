@@ -58,15 +58,56 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal active">
+        <div class="modal-content" style="max-width: 400px;">
+            <h2 style="text-align: center; color: #2563eb; margin-bottom: 10px;">
+                <i class="fas fa-lock"></i> Admin Login
+            </h2>
+            <p style="text-align: center; color: #666; margin-bottom: 30px;">
+                Enter your credentials to access the admin panel
+            </p>
+            <form id="adminLoginForm">
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="adminEmail" placeholder="admin@ermimobile.com" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-key"></i> Password</label>
+                    <input type="password" id="adminPassword" placeholder="Enter password" required>
+                </div>
+                <div id="loginError" style="color: #ef4444; margin-bottom: 15px; display: none; text-align: center;"></div>
+                <button type="submit" class="btn-save" style="width: 100%; padding: 15px; font-size: 1rem;">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </form>
+            <p style="text-align: center; margin-top: 20px; color: #666; font-size: 0.9rem;">
+                <a href="index.html" style="color: #2563eb; text-decoration: none;">
+                    <i class="fas fa-arrow-left"></i> Back to Store
+                </a>
+            </p>
+        </div>
+    </div>
+
+    <div class="container" id="adminContent" style="display: none;">
         <div class="nav">
-            <a href="#" onclick="showSection('dashboard')">📊 Dashboard</a>
-            <a href="#" onclick="showSection('users')">👥 Users</a>
-            <a href="#" onclick="showSection('categories')">📁 Categories</a>
-            <a href="#" onclick="showSection('products')">📦 Products</a>
-            <a href="#" onclick="showSection('orders')">🛒 Orders</a>
-            <a href="#" onclick="showSection('settings')">⚙️ Settings</a>
-            <a href="index.html">🏠 Back to Store</a>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <a href="#" onclick="showSection('dashboard')">📊 Dashboard</a>
+                    <a href="#" onclick="showSection('users')">👥 Users</a>
+                    <a href="#" onclick="showSection('categories')">📁 Categories</a>
+                    <a href="#" onclick="showSection('products')">📦 Products</a>
+                    <a href="#" onclick="showSection('orders')">🛒 Orders</a>
+                    <a href="#" onclick="showSection('settings')">⚙️ Settings</a>
+                    <a href="index.html">🏠 Back to Store</a>
+                </div>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <span id="currentUserInfo" style="color: #d1d5db;"></span>
+                    <button onclick="logout()" class="btn-delete" style="padding: 8px 15px;">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
         </div>
 
         <h1>Ermi Mobile Admin Dashboard</h1>
@@ -545,6 +586,94 @@
             : `${window.location.origin}/api`;
         let currentProducts = [];
         let categories = [];
+        let currentUser = null;
+
+        // Check if user is already logged in
+        function checkAuth() {
+            const savedUser = localStorage.getItem('adminUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showAdminPanel();
+            }
+        }
+
+        // Show admin panel
+        function showAdminPanel() {
+            document.getElementById('loginModal').classList.remove('active');
+            document.getElementById('adminContent').style.display = 'block';
+            
+            // Display user info
+            const roleColor = currentUser.role === 'admin' ? '#ef4444' : '#f59e0b';
+            const roleIcon = currentUser.role === 'admin' ? '👑' : '✏️';
+            document.getElementById('currentUserInfo').innerHTML = `
+                ${roleIcon} <strong>${currentUser.name}</strong> 
+                <span style="color: ${roleColor};">(${currentUser.role})</span>
+            `;
+            
+            // Load data
+            loadStats();
+            loadProducts();
+            loadCategories();
+            loadOrders();
+        }
+
+        // Login form handler
+        document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('adminEmail').value.trim();
+            const password = document.getElementById('adminPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            errorDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch(API + '/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Check if user has admin or editor role
+                    if (data.user.role !== 'admin' && data.user.role !== 'editor') {
+                        errorDiv.textContent = '❌ Access denied. Admin or editor privileges required.';
+                        errorDiv.style.display = 'block';
+                        return;
+                    }
+                    
+                    // Save user info
+                    currentUser = data.user;
+                    localStorage.setItem('adminUser', JSON.stringify(currentUser));
+                    
+                    // Show admin panel
+                    showAdminPanel();
+                } else {
+                    errorDiv.textContent = '❌ ' + (data.error || 'Login failed');
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                errorDiv.textContent = '❌ Server error. Please try again.';
+                errorDiv.style.display = 'block';
+            }
+        });
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('adminUser');
+                currentUser = null;
+                document.getElementById('adminContent').style.display = 'none';
+                document.getElementById('loginModal').classList.add('active');
+                document.getElementById('adminLoginForm').reset();
+            }
+        }
+
+        // Check auth on page load
+        checkAuth();
 
         function toggleCategory(catId) {
             const childRows = document.querySelectorAll(`[data-parent="${catId}"]`);
