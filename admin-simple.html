@@ -230,6 +230,12 @@
                         <div id="heroImagePreview" style="margin-top: 10px;"></div>
                     </div>
                     
+                    <h3 style="margin-top: 40px; margin-bottom: 20px;">Hero Slider Products</h3>
+                    <p style="color: #666; margin-bottom: 15px;">Select which products appear in the hero carousel (up to 5 products)</p>
+                    <div id="heroSliderProducts" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <!-- Products will be loaded here -->
+                    </div>
+                    
                     <h3 style="margin-top: 40px; margin-bottom: 20px;">About Section</h3>
                     
                     <div class="form-group">
@@ -1724,8 +1730,48 @@
                         '<p style="color: #666; margin-bottom: 5px;">Current Image:</p>' +
                         '<img src="' + data.settings.hero_background_image + '" style="max-width: 300px; border-radius: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">';
                 }
+                
+                // Load hero slider products
+                loadHeroSliderProducts();
             } catch (error) {
                 console.error('Error loading settings:', error);
+            }
+        }
+        
+        async function loadHeroSliderProducts() {
+            try {
+                const response = await fetch(API + '/products');
+                const data = await response.json();
+                const container = document.getElementById('heroSliderProducts');
+                
+                const productsWithImages = data.products.filter(p => p.image);
+                
+                if (productsWithImages.length === 0) {
+                    container.innerHTML = '<p style="color: #999;">No products with images found. Add images to products first.</p>';
+                    return;
+                }
+                
+                container.innerHTML = productsWithImages.map((product, index) => `
+                    <div style="border: 2px solid ${index < 5 ? '#10b981' : '#ddd'}; border-radius: 8px; padding: 10px; text-align: center;">
+                        <img src="${product.image}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px; margin-bottom: 10px;">
+                        <p style="font-size: 14px; font-weight: 600; margin: 5px 0;">${product.name}</p>
+                        <p style="font-size: 12px; color: ${index < 5 ? '#10b981' : '#999'}; font-weight: 600;">
+                            ${index < 5 ? '✓ In Hero Slider' : 'Not in slider'}
+                        </p>
+                        <p style="font-size: 11px; color: #666; margin-top: 5px;">Position: ${index + 1}</p>
+                    </div>
+                `).join('');
+                
+                container.innerHTML += `
+                    <div style="grid-column: 1/-1; padding: 15px; background: #f0f9ff; border-radius: 8px; margin-top: 10px;">
+                        <p style="margin: 0; color: #2563eb; font-size: 14px;">
+                            <strong>ℹ️ Note:</strong> The first 5 products with images will automatically appear in the hero slider. 
+                            To change which products appear, reorder them by editing their IDs or upload images to different products.
+                        </p>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading hero slider products:', error);
             }
         }
         
