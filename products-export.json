@@ -1,0 +1,299 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Wireless Earbuds",
+      "price": 1800,
+      "icon": "fa-headphones",
+      "description": "High-quality wireless earbuds with noise cancellation",
+      "stock": 100,
+      "image": "/uploads/product-1763578578741-888442795.jpg",
+      "category_id": 1,
+      "images": null
+    },
+    {
+      "id": 2,
+      "name": "IPhone Case",
+      "price": 1000,
+      "icon": "fa-mobile-screen",
+      "description": "Durable protective case for all phone models\nIPHONE 12 PROMAX\nIPHONE 13 PROMAX\nIPHONE 14 PROMAX\nIPHONE 15 PROMAX\nIPHONE 16 PROMAX\n",
+      "stock": 100,
+      "image": "/uploads/product-1763666235390-40259057.jpg",
+      "category_id": 2,
+      "images": null
+    },
+    {
+      "id": 3,
+      "name": "Super Fast Charger",
+      "price": 1400,
+      "icon": "fa-plug",
+      "description": "30W fast charging adapter",
+      "stock": 100,
+      "image": "/uploads/product-1763666255453-545293098.jpg",
+      "category_id": 3,
+      "images": null
+    },
+    {
+      "id": 4,
+      "name": "20,000 MHA Power Bank",
+      "price": 2500,
+      "icon": "fa-battery-full",
+      "description": "20000mAh portable power bank",
+      "stock": 100,
+      "image": "/uploads/product-1763666274004-189078652.jpg",
+      "category_id": 3,
+      "images": null
+    },
+    {
+      "id": 5,
+      "name": "Mofi Mouse",
+      "price": 1200,
+      "icon": "fa-shield-halved",
+      "description": "Tempered glass screen protector",
+      "stock": 100,
+      "image": "/uploads/product-1763664745231-187120476.jpg",
+      "category_id": null,
+      "images": null
+    },
+    {
+      "id": 6,
+      "name": "Smart Watch",
+      "price": 1500,
+      "icon": "fa-clock",
+      "description": "Feature-rich smartwatch with health tracking",
+      "stock": 100,
+      "image": "/uploads/product-1763664563556-718436160.jpg",
+      "category_id": 4,
+      "images": null
+    },
+    {
+      "id": 7,
+      "name": "K9 MICROPHON",
+      "price": 1500,
+      "icon": "MIC",
+      "description": "",
+      "stock": 100,
+      "image": "/uploads/product-1763664380615-239632977.jpg",
+      "category_id": 1,
+      "images": null
+    },
+    {
+      "id": 8,
+      "name": "Wireless Earbuds",
+      "price": 2500,
+      "icon": "fa-headphones",
+      "description": "",
+      "stock": 100,
+      "image": null,
+      "category_id": null,
+      "images": null
+    },
+    {
+      "id": 9,
+      "name": "Wireless Earbuds Pro",
+      "price": 2500,
+      "icon": "fa-headphones",
+      "description": "Premium wireless earbuds with active noise cancellation and 24-hour battery life",
+      "stock": 50,
+      "image": null,
+      "category_id": null,
+      "images": null
+    },
+    {
+      "id": 10,
+      "name": "Protective Phone Case",
+      "price": 500,
+      "icon": "fa-mobile-alt",
+      "description": "Durable protective case with shock absorption for all phone models",
+      "stock": 100,
+      "image": null,
+      "category_id": null,
+      "images": null
+    },
+    {
+      "id": 11,
+      "name": "Fast Charger 20W",
+      "price": 800,
+      "icon": "fa-charging-station",
+      "description": "Quick charge adapter with USB-C port and smart charging technology",
+      "stock": 75,
+      "image": null,
+      "category_id": null,
+      "images": null
+    },
+    {
+      "id": 12,
+      "name": "Tempered Glass Screen Protector",
+      "price": 300,
+      "icon": "fa-shield-alt",
+      "description": "9H hardness tempered glass with oleophobic coating",
+      "stock": 150,
+      "image": null,
+      "category_id": null,
+      "images": null
+    },
+    {
+      "id": 13,
+      "name": "Power Bank 10000mAh",
+      "price": 1800,
+      "icon": "fa-battery-full",
+      "description": "Portable power bank with dual USB ports and LED indicator",
+      "stock": 40,
+      "image": null,
+      "category_id": null,
+      "images": null
+    },
+    {
+      "id": 14,
+      "name": "USB-C Cable 2m",
+      "price": 400,
+      "icon": "fa-plug",
+      "description": "Durable braided USB-C charging cable with fast data transfer",
+      "stock": 200,
+      "image": null,
+      "category_id": null,
+      "images": null
+    },
+    {
+      "id": 15,
+      "name": "Car Phone Holder",
+      "price": 600,
+      "icon": "fa-car",
+      "description": "Universal car phone holder with 360° rotation and strong grip",
+      "stock": 80,
+      "image": null,
+      "category_id": null,
+      "images": null
+    },
+    {
+      "id": 16,
+      "name": "Bluetooth Speaker",
+      "price": 3500,
+      "icon": "fa-volume-up",
+      "description": "Portable Bluetooth speaker with deep bass and 12-hour playtime",
+      "stock": 30,
+      "image": null,
+      "category_id": null,
+      "images": null
+    },
+    {
+      "id": 17,
+      "name": "Selfie Stick with Tripod",
+      "price": 900,
+      "icon": "fa-camera",
+      "description": "Extendable selfie stick with built-in tripod and Bluetooth remote",
+      "stock": 60,
+      "image": null,
+      "category_id": null,
+      "images": null
+    },
+    {
+      "id": 18,
+      "name": "Phone Ring Holder",
+      "price": 250,
+      "icon": "fa-ring",
+      "description": "360° rotating ring holder with magnetic car mount compatibility",
+      "stock": 120,
+      "image": null,
+      "category_id": null,
+      "images": null
+    },
+    {
+      "id": 19,
+      "name": "Wireless Charging Pad",
+      "price": 1200,
+      "icon": "fa-wifi",
+      "description": "Fast wireless charging pad compatible with all Qi-enabled devices",
+      "stock": 45,
+      "image": null,
+      "category_id": null,
+      "images": null
+    },
+    {
+      "id": 20,
+      "name": "AUX Audio Cable",
+      "price": 350,
+      "icon": "fa-headphones-alt",
+      "description": "3.5mm auxiliary audio cable with gold-plated connectors",
+      "stock": 90,
+      "image": null,
+      "category_id": null,
+      "images": null
+    }
+  ],
+  "images": {
+    "1": [
+      {
+        "id": 1,
+        "product_id": 1,
+        "image_url": "/uploads/product-1763578578741-888442795.jpg",
+        "is_primary": 0,
+        "display_order": 0,
+        "created_at": "2025-11-22 11:43:53"
+      }
+    ],
+    "2": [
+      {
+        "id": 5,
+        "product_id": 2,
+        "image_url": "/uploads/product-1763666235390-40259057.jpg",
+        "is_primary": 0,
+        "display_order": 0,
+        "created_at": "2025-11-22 11:43:54"
+      }
+    ],
+    "3": [
+      {
+        "id": 4,
+        "product_id": 3,
+        "image_url": "/uploads/product-1763666255453-545293098.jpg",
+        "is_primary": 0,
+        "display_order": 0,
+        "created_at": "2025-11-22 11:43:54"
+      }
+    ],
+    "4": [
+      {
+        "id": 2,
+        "product_id": 4,
+        "image_url": "/uploads/product-1763666274004-189078652.jpg",
+        "is_primary": 0,
+        "display_order": 0,
+        "created_at": "2025-11-22 11:43:53"
+      }
+    ],
+    "5": [
+      {
+        "id": 3,
+        "product_id": 5,
+        "image_url": "/uploads/product-1763664745231-187120476.jpg",
+        "is_primary": 0,
+        "display_order": 0,
+        "created_at": "2025-11-22 11:43:53"
+      }
+    ],
+    "6": [
+      {
+        "id": 6,
+        "product_id": 6,
+        "image_url": "/uploads/product-1763664563556-718436160.jpg",
+        "is_primary": 0,
+        "display_order": 0,
+        "created_at": "2025-11-22 11:43:54"
+      }
+    ],
+    "7": [
+      {
+        "id": 7,
+        "product_id": 7,
+        "image_url": "/uploads/product-1763664380615-239632977.jpg",
+        "is_primary": 0,
+        "display_order": 0,
+        "created_at": "2025-11-22 11:43:54"
+      }
+    ]
+  },
+  "exportDate": "2025-11-22T15:01:45.285Z",
+  "totalProducts": 20,
+  "totalImages": 7
+}

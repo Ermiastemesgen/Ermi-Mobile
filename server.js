@@ -1249,6 +1249,80 @@ app.get('/api/admin/stats', (req, res) => {
     });
 });
 
+// Import products from export file (admin only)
+app.get('/api/admin/import-products', async (req, res) => {
+    const exportFile = path.join(__dirname, 'products-export.json');
+    
+    // Check if file exists
+    if (!fs.existsSync(exportFile)) {
+        return res.status(404).json({ 
+            error: 'Export file not found',
+            message: 'Please create products-export.json first by running export-products.js locally'
+        });
+    }
+
+    try {
+        const data = JSON.parse(fs.readFileSync(exportFile, 'utf8'));
+        const products = data.products;
+        const imagesByProduct = data.images;
+
+        let imported = 0;
+        let skipped = 0;
+        let imagesImported = 0;
+
+        for (const product of products) {
+            await new Promise((resolve) => {
+                db.get('SELECT id FROM products WHERE name = ?', [product.name], (err, existing) => {
+                    if (existing) {
+                        skipped++;
+                        resolve();
+                        return;
+                    }
+
+                    db.run(
+                        'INSERT INTO products (name, price, icon, stock, description, category_id, image, images) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                        [product.name, product.price, product.icon, product.stock, product.description, product.category_id, product.image, product.images],
+                        function(err) {
+                            if (err) {
+                                console.error('Error importing product:', err.message);
+                                resolve();
+                                return;
+                            }
+
+                            const newProductId = this.lastID;
+                            imported++;
+
+                            const images = imagesByProduct[product.id] || [];
+                            if (images.length > 0) {
+                                const stmt = db.prepare('INSERT INTO product_images (product_id, image_url, display_order) VALUES (?, ?, ?)');
+                                images.forEach(img => {
+                                    stmt.run(newProductId, img.image_url, img.display_order);
+                                    imagesImported++;
+                                });
+                                stmt.finalize();
+                            }
+
+                            resolve();
+                        }
+                    );
+                });
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Products imported successfully',
+            imported: imported,
+            skipped: skipped,
+            imagesImported: imagesImported,
+            total: products.length
+        });
+
+    } catch (error) {
+        res.status(500).json({ error: 'Import failed', message: error.message });
+    }
+});
+
 // Update product (admin only)
 app.put('/api/admin/products/:id', (req, res) => {
     const { id } = req.params;
