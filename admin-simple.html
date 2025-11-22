@@ -150,9 +150,9 @@
             <h2>👥 Users</h2>
             <table>
                 <thead>
-                    <tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Created</th></tr>
+                    <tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Created</th><th>Actions</th></tr>
                 </thead>
-                <tbody id="usersTable"><tr><td colspan="5">Loading...</td></tr></tbody>
+                <tbody id="usersTable"><tr><td colspan="6">Loading...</td></tr></tbody>
             </table>
         </div>
 
@@ -1177,10 +1177,38 @@
                         <td>${user.email}</td>
                         <td><span class="badge ${user.role}">${user.role}</span></td>
                         <td>${new Date(user.created_at).toLocaleDateString()}</td>
+                        <td>
+                            ${user.role !== 'admin' ? 
+                                `<button onclick="deleteUser(${user.id}, '${user.name}')" class="btn-danger" style="padding: 5px 10px; font-size: 12px;">Delete</button>` : 
+                                '<span style="color: #999; font-size: 12px;">Protected</span>'
+                            }
+                        </td>
                     </tr>
                 `).join('');
             } catch (error) {
                 console.error('Error loading users:', error);
+            }
+        }
+
+        async function deleteUser(userId, userName) {
+            if (!confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) return;
+            
+            try {
+                const response = await fetch(API + '/admin/users/' + userId, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert('User deleted successfully!');
+                    loadUsers();
+                    loadStats();
+                } else {
+                    const error = await response.json();
+                    alert('Failed to delete user: ' + (error.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                alert('Error: ' + error.message);
             }
         }
 
@@ -1392,8 +1420,15 @@
                     preview.innerHTML = '<p style="color: #666; margin-bottom: 10px;">Current Images (' + data.images.length + '):</p>';
                     data.images.forEach(img => {
                         const imgDiv = document.createElement('div');
-                        imgDiv.style.cssText = 'position: relative;';
-                        imgDiv.innerHTML = '<img src="' + img.image_url + '" style="max-width: 150px; max-height: 150px; border-radius: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">';
+                        imgDiv.style.cssText = 'position: relative; display: inline-block; margin: 5px;';
+                        imgDiv.innerHTML = `
+                            <img src="${img.image_url}" style="max-width: 150px; max-height: 150px; border-radius: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block;">
+                            <button onclick="deleteProductImage(${img.id}, ${id})" 
+                                    style="position: absolute; top: 5px; right: 5px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"
+                                    title="Delete this image">
+                                ×
+                            </button>
+                        `;
                         preview.appendChild(imgDiv);
                     });
                 } else if (product.image) {
@@ -1455,6 +1490,28 @@
                     }
                 } catch (error) {
                     alert('❌ Error deleting product: ' + error.message);
+                }
+            }
+        }
+
+        async function deleteProductImage(imageId, productId) {
+            if (confirm('Are you sure you want to delete this image?')) {
+                try {
+                    const response = await fetch(API + '/admin/products/images/' + imageId, {
+                        method: 'DELETE'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        alert('✅ Image deleted successfully!');
+                        // Reload the product edit modal to show updated images
+                        editProduct(productId);
+                    } else {
+                        alert('❌ Error: ' + data.error);
+                    }
+                } catch (error) {
+                    alert('❌ Error deleting image: ' + error.message);
                 }
             }
         }
