@@ -120,15 +120,22 @@ let transporter = null;
 try {
     if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
         transporter = nodemailer.createTransport({
-            service: 'gmail',
+            host: 'smtp.gmail.com',
+            port: 587,
+            secure: false, // Use TLS
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS
             },
-            connectionTimeout: 5000, // 5 second timeout
-            greetingTimeout: 5000
+            tls: {
+                rejectUnauthorized: false,
+                ciphers: 'SSLv3'
+            },
+            connectionTimeout: 10000, // 10 second timeout
+            greetingTimeout: 10000,
+            socketTimeout: 10000
         });
-        console.log('📧 Email configured (will verify on first use)');
+        console.log('📧 Email configured with SMTP settings');
     } else {
         console.log('📧 Email not configured - verification links will be logged to console');
     }
