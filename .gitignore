@@ -8,6 +8,9 @@ node_modules/
 # Database (don't commit your production database)
 # emobile.db
 
+# Product exports (don't commit sample data)
+products-export.json
+
 # Uploads (user uploaded files)
 # uploads/
 
