@@ -4,6 +4,31 @@ const API_URL = window.location.hostname === 'localhost'
     ? 'http://localhost:3000/api' 
     : `${window.location.origin}/api`;
 
+// ===== Theme Toggle =====
+const themeToggle = document.getElementById('themeToggle');
+const body = document.body;
+
+// Load saved theme
+const savedTheme = localStorage.getItem('theme') || 'light';
+if (savedTheme === 'dark') {
+    body.classList.add('dark-mode');
+}
+
+// Theme toggle handler
+if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+        body.classList.toggle('dark-mode');
+        const currentTheme = body.classList.contains('dark-mode') ? 'dark' : 'light';
+        localStorage.setItem('theme', currentTheme);
+        
+        // Show notification
+        showNotification(
+            currentTheme === 'dark' ? '🌙 Dark mode enabled' : '☀️ Light mode enabled',
+            'success'
+        );
+    });
+}
+
 // ===== Product Data =====
 let products = [];
 
