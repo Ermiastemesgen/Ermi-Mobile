@@ -10,6 +10,8 @@ const multer = require('multer');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 // ===== Initialize Express App =====
 const app = express();
@@ -36,7 +38,7 @@ app.use((req, res, next) => {
     // Content Security Policy
     res.setHeader(
         'Content-Security-Policy',
-        "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' *;"
+        "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data: blob: https://res.cloudinary.com; connect-src 'self' *;"
     );
     
     // Handle preflight requests
@@ -49,24 +51,53 @@ app.use((req, res, next) => {
 
 app.use(express.static(__dirname)); // Serve static files (HTML, CSS, JS)
 
-// Create uploads directory if it doesn't exist
+// Create uploads directory if it doesn't exist (for local fallback)
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir);
 }
 app.use('/uploads', express.static(uploadsDir));
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/');
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const prefix = file.fieldname === 'receipt' ? 'receipt-' : 'product-';
-        cb(null, prefix + uniqueSuffix + path.extname(file.originalname));
-    }
-});
+// ===== Cloudinary Configuration =====
+const useCloudinary = process.env.CLOUDINARY_CLOUD_NAME && 
+                      process.env.CLOUDINARY_API_KEY && 
+                      process.env.CLOUDINARY_API_SECRET;
+
+if (useCloudinary) {
+    cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET
+    });
+    console.log('☁️  Cloudinary configured for image storage');
+} else {
+    console.log('📁 Using local file storage (images will be temporary on Render)');
+}
+
+// Configure multer storage (Cloudinary or local)
+const storage = useCloudinary 
+    ? new CloudinaryStorage({
+        cloudinary: cloudinary,
+        params: {
+            folder: 'ermi-mobile',
+            allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+            transformation: [{ width: 2000, height: 2000, crop: 'limit', quality: 'auto' }],
+            public_id: (req, file) => {
+                const prefix = file.fieldname === 'receipt' ? 'receipt' : 'product';
+                return `${prefix}-${Date.now()}-${Math.round(Math.random() * 1E9)}`;
+            }
+        }
+    })
+    : multer.diskStorage({
+        destination: function (req, file, cb) {
+            cb(null, 'uploads/');
+        },
+        filename: function (req, file, cb) {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            const prefix = file.fieldname === 'receipt' ? 'receipt-' : 'product-';
+            cb(null, prefix + uniqueSuffix + path.extname(file.originalname));
+        }
+    });
 
 const upload = multer({
     storage: storage,
@@ -613,7 +644,7 @@ app.post('/api/admin/categories/:id/upload', upload.single('image'), (req, res) 
         return res.status(400).json({ error: 'No image file uploaded' });
     }
 
-    const imagePath = '/uploads/' + req.file.filename;
+    const imagePath = useCloudinary ? req.file.path : '/uploads/' + req.file.filename;
 
     db.run(
         'UPDATE categories SET image = ? WHERE id = ?',
@@ -939,9 +970,10 @@ app.post('/api/orders/:id/receipt', upload.single('receipt'), (req, res) => {
         return res.status(400).json({ error: 'No receipt file uploaded' });
     }
 
-    const receiptPath = '/uploads/' + req.file.filename;
-    console.log('✅ Receipt file received:', req.file.filename);
+    const receiptPath = useCloudinary ? req.file.path : '/uploads/' + req.file.filename;
+    console.log('✅ Receipt file received:', req.file.filename || req.file.originalname);
     console.log('📁 Receipt path:', receiptPath);
+    console.log('☁️  Storage:', useCloudinary ? 'Cloudinary' : 'Local');
 
     db.run(
         'UPDATE orders SET payment_receipt = ? WHERE id = ?',
@@ -1199,8 +1231,16 @@ app.post('/api/admin/products/:id/upload-multiple', upload.array('images', 10), 
         return res.status(400).json({ error: 'No images uploaded' });
     }
 
-    const newImagePaths = req.files.map(file => '/uploads/' + file.filename);
+    // Get image paths (Cloudinary URL or local path)
+    const newImagePaths = req.files.map(file => {
+        if (useCloudinary) {
+            return file.path; // Cloudinary returns full URL in file.path
+        } else {
+            return '/uploads/' + file.filename; // Local path
+        }
+    });
     console.log('✅ Files received:', req.files.length);
+    console.log('📁 Storage type:', useCloudinary ? 'Cloudinary' : 'Local');
 
     // Get existing images from product_images table
     db.all('SELECT image_url, display_order FROM product_images WHERE product_id = ? ORDER BY display_order', [id], (err, existingImages) => {
@@ -1268,9 +1308,11 @@ app.post('/api/admin/products/:id/upload', upload.single('image'), (req, res) =>
         return res.status(400).json({ error: 'No image file uploaded' });
     }
 
-    const imagePath = '/uploads/' + req.file.filename;
-    console.log('✅ File received:', req.file.filename);
+    // Get image path (Cloudinary URL or local path)
+    const imagePath = useCloudinary ? req.file.path : '/uploads/' + req.file.filename;
+    console.log('✅ File received:', req.file.filename || req.file.originalname);
     console.log('📁 Image path:', imagePath);
+    console.log('☁️  Storage:', useCloudinary ? 'Cloudinary' : 'Local');
 
     // Get existing images to calculate display order
     db.all('SELECT image_url, display_order FROM product_images WHERE product_id = ? ORDER BY display_order', [id], (err, existingImages) => {
@@ -1383,7 +1425,7 @@ app.post('/api/admin/settings/hero-image/upload', upload.single('image'), (req, 
         return res.status(400).json({ error: 'No image file uploaded' });
     }
 
-    const imagePath = '/uploads/' + req.file.filename;
+    const imagePath = useCloudinary ? req.file.path : '/uploads/' + req.file.filename;
 
     db.run(
         'INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)',
