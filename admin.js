@@ -84,22 +84,25 @@ async function loadUsers() {
         const tbody = document.getElementById('usersTableBody');
         
         if (data.users && data.users.length > 0) {
-            tbody.innerHTML = data.users.map(user => `
-                <tr>
-                    <td>${user.id}</td>
-                    <td>${user.name}</td>
-                    <td>${user.email}</td>
-                    <td><span class="role-badge role-${user.role}">${user.role}</span></td>
-                    <td>${new Date(user.created_at).toLocaleDateString()}</td>
-                    <td>
-                        ${user.role !== 'admin' ? 
-                            `<button onclick="deleteUser(${user.id}, '${user.name}')" class="btn-small btn-danger">Delete</button>` : 
-                            '<span style="color: #6b7280; font-size: 0.85rem;">Protected</span>'
-                        }
-                    </td>
-                </tr>
-            `).join('');
-            console.log('Users table updated');
+            tbody.innerHTML = data.users.map(user => {
+                console.log('Processing user:', user.name, 'Role:', user.role);
+                return `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td><span class="role-badge role-${user.role}">${user.role}</span></td>
+                        <td>${new Date(user.created_at).toLocaleDateString()}</td>
+                        <td>
+                            ${user.role !== 'admin' ? 
+                                `<button onclick="deleteUser(${user.id}, '${user.name}')" class="btn-small btn-danger">Delete</button>` : 
+                                '<span style="color: #6b7280; font-size: 0.85rem;">Protected</span>'
+                            }
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            console.log('Users table updated with delete buttons');
         } else {
             tbody.innerHTML = '<tr><td colspan="6">No users found</td></tr>';
         }
