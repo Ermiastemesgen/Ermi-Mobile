@@ -221,7 +221,9 @@ const sendVerificationEmail = async (email, token, name) => {
 };
 
 // ===== Initialize Database =====
-const db = new sqlite3.Database('./emobile.db', (err) => {
+// Use persistent storage on Render (/data) or local storage in development
+const dbPath = process.env.DATABASE_PATH || './emobile.db';
+const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Error opening database:', err.message);
     } else {
@@ -1867,7 +1869,7 @@ app.get('/api/debug/products/:id', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`\n🚀 Ermi Mobile Server is running!`);
     console.log(`📍 Port: ${PORT}`);
-    console.log(`💾 Database: emobile.db`);
+    console.log(`💾 Database: ${dbPath}`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`\nAPI Endpoints:`);
     console.log(`  GET  /api/products`);
