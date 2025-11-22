@@ -464,10 +464,67 @@ function syncProductImages() {
     });
 }
 
+// ===== Ensure Main Admin Account =====
+async function ensureMainAdmin() {
+    const mainAdmin = {
+        name: 'Ermias',
+        email: 'ermias616@gmail.com',
+        password: 'Ermi@0211',
+        role: 'admin'
+    };
+
+    // Check if account exists
+    db.get('SELECT * FROM users WHERE email = ?', [mainAdmin.email], async (err, user) => {
+        if (err) {
+            console.error('Error checking main admin:', err.message);
+            return;
+        }
+
+        try {
+            const hashedPassword = await bcrypt.hash(mainAdmin.password, 10);
+
+            if (!user) {
+                // Create account if doesn't exist
+                db.run(
+                    'INSERT INTO users (name, email, password, role, email_verified) VALUES (?, ?, ?, ?, 1)',
+                    [mainAdmin.name, mainAdmin.email, hashedPassword, mainAdmin.role],
+                    (err) => {
+                        if (err) {
+                            console.error('Error creating main admin:', err.message);
+                        } else {
+                            console.log(`✅ Main admin account created: ${mainAdmin.email}`);
+                        }
+                    }
+                );
+            } else if (user.role !== 'admin') {
+                // Update to admin if not already
+                db.run(
+                    'UPDATE users SET role = ?, password = ? WHERE email = ?',
+                    [mainAdmin.role, hashedPassword, mainAdmin.email],
+                    (err) => {
+                        if (err) {
+                            console.error('Error updating main admin:', err.message);
+                        } else {
+                            console.log(`✅ Main admin role updated: ${mainAdmin.email}`);
+                        }
+                    }
+                );
+            } else {
+                console.log(`✅ Main admin verified: ${mainAdmin.email}`);
+            }
+        } catch (error) {
+            console.error('Error processing main admin:', error);
+        }
+    });
+}
+
 // ===== Create Default Accounts =====
 async function createDefaultAccounts() {
+    // Ensure main admin account first
+    ensureMainAdmin();
+
     const defaultAccounts = [
-        { name: 'Admin', email: 'admin@ermimobile.com', password: 'admin123', role: 'admin', email_verified: 1 },
+        { name: 'Admin', email: 'old-admin@ermimobile.com', password: 'admin123', role: 'admin', email_verified: 1 },
         { name: 'Editor User', email: 'editor@ermimobile.com', password: 'editor123', role: 'editor', email_verified: 1 },
         { name: 'Regular User', email: 'user@ermimobile.com', password: 'user123', role: 'user', email_verified: 1 }
     ];
