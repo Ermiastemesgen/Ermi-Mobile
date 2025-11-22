@@ -595,6 +595,26 @@ app.get('/api/products', (req, res) => {
     });
 });
 
+// Get single product by ID
+app.get('/api/products/:id', (req, res) => {
+    const { id } = req.params;
+    const query = `
+        SELECT p.*, c.name as category_name 
+        FROM products p 
+        LEFT JOIN categories c ON p.category_id = c.id
+        WHERE p.id = ?
+    `;
+    db.get(query, [id], (err, row) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else if (!row) {
+            res.status(404).json({ error: 'Product not found' });
+        } else {
+            res.json({ product: row });
+        }
+    });
+});
+
 // Get all categories with hierarchy
 app.get('/api/categories', (req, res) => {
     db.all('SELECT * FROM categories ORDER BY parent_id, name', [], (err, rows) => {
