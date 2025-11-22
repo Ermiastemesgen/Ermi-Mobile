@@ -341,6 +341,19 @@ function insertDefaultProducts() {
 
 // ===== API Routes =====
 
+// Get product images
+app.get('/api/products/:id/images', (req, res) => {
+    const { id } = req.params;
+    
+    db.all('SELECT * FROM product_images WHERE product_id = ? ORDER BY display_order', [id], (err, rows) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else {
+            res.json({ images: rows });
+        }
+    });
+});
+
 // Get all products
 app.get('/api/products', (req, res) => {
     const query = `
@@ -1037,7 +1050,71 @@ app.put('/api/admin/products/:id', (req, res) => {
     );
 });
 
-// Upload product image
+// Upload multiple product images
+app.post('/api/admin/products/:id/upload-multiple', upload.array('images', 10), (req, res) => {
+    const { id } = req.params;
+    
+    console.log('📸 Multiple images upload for product:', id);
+    
+    if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ error: 'No images uploaded' });
+    }
+
+    const newImagePaths = req.files.map(file => '/uploads/' + file.filename);
+    console.log('✅ Files received:', req.files.length);
+
+    // Get existing images from product_images table
+    db.all('SELECT image_url, display_order FROM product_images WHERE product_id = ? ORDER BY display_order', [id], (err, existingImages) => {
+        if (err) {
+            console.log('❌ Database error:', err.message);
+            return res.status(500).json({ error: err.message });
+        }
+
+        // Calculate starting display order
+        const startOrder = existingImages.length;
+        
+        // Insert new images into product_images table
+        const stmt = db.prepare('INSERT INTO product_images (product_id, image_url, display_order) VALUES (?, ?, ?)');
+        
+        newImagePaths.forEach((path, index) => {
+            stmt.run(id, path, startOrder + index);
+        });
+        
+        stmt.finalize((err) => {
+            if (err) {
+                console.log('❌ Database error:', err.message);
+                return res.status(500).json({ error: err.message });
+            }
+            
+            // Get all images for this product
+            db.all('SELECT image_url FROM product_images WHERE product_id = ? ORDER BY display_order', [id], (err, allImages) => {
+                if (err) {
+                    return res.status(500).json({ error: err.message });
+                }
+                
+                const allImagePaths = allImages.map(img => img.image_url);
+                
+                // Update the main product image and images JSON
+                db.run('UPDATE products SET image = ?, images = ? WHERE id = ?', 
+                    [allImagePaths[0], JSON.stringify(allImagePaths), id], (err) => {
+                        if (err) {
+                            console.log('❌ Error updating product:', err.message);
+                        }
+                        
+                        console.log('✅ Images saved to database');
+                        res.json({
+                            success: true,
+                            message: `${newImagePaths.length} images uploaded successfully`,
+                            imagePaths: newImagePaths,
+                            totalImages: allImagePaths.length
+                        });
+                    });
+            });
+        });
+    });
+});
+
+// Upload product image (single - adds to existing images)
 app.post('/api/admin/products/:id/upload', upload.single('image'), (req, res) => {
     const { id } = req.params;
     
@@ -1052,26 +1129,49 @@ app.post('/api/admin/products/:id/upload', upload.single('image'), (req, res) =>
     console.log('✅ File received:', req.file.filename);
     console.log('📁 Image path:', imagePath);
 
-    db.run(
-        'UPDATE products SET image = ? WHERE id = ?',
-        [imagePath, id],
-        function(err) {
-            if (err) {
-                console.log('❌ Database error:', err.message);
-                res.status(500).json({ error: err.message });
-            } else if (this.changes === 0) {
-                console.log('❌ Product not found:', id);
-                res.status(404).json({ error: 'Product not found' });
-            } else {
-                console.log('✅ Image updated in database for product:', id);
-                res.json({
-                    success: true,
-                    message: 'Image uploaded successfully',
-                    imagePath: imagePath
-                });
-            }
+    // Get existing images to calculate display order
+    db.all('SELECT image_url, display_order FROM product_images WHERE product_id = ? ORDER BY display_order', [id], (err, existingImages) => {
+        if (err) {
+            console.log('❌ Database error:', err.message);
+            return res.status(500).json({ error: err.message });
         }
-    );
+
+        const displayOrder = existingImages.length;
+        
+        // Insert new image into product_images table
+        db.run('INSERT INTO product_images (product_id, image_url, display_order) VALUES (?, ?, ?)', 
+            [id, imagePath, displayOrder], (err) => {
+                if (err) {
+                    console.log('❌ Database error:', err.message);
+                    return res.status(500).json({ error: err.message });
+                }
+                
+                // Get all images for this product
+                db.all('SELECT image_url FROM product_images WHERE product_id = ? ORDER BY display_order', [id], (err, allImages) => {
+                    if (err) {
+                        return res.status(500).json({ error: err.message });
+                    }
+                    
+                    const allImagePaths = allImages.map(img => img.image_url);
+                    
+                    // Update the main product image (first image) and images JSON
+                    db.run('UPDATE products SET image = ?, images = ? WHERE id = ?', 
+                        [allImagePaths[0], JSON.stringify(allImagePaths), id], (err) => {
+                            if (err) {
+                                console.log('❌ Error updating product:', err.message);
+                            }
+                            
+                            console.log('✅ Image added to product:', id);
+                            res.json({
+                                success: true,
+                                message: 'Image uploaded successfully',
+                                imagePath: imagePath,
+                                totalImages: allImagePaths.length
+                            });
+                        });
+                });
+            });
+    });
 });
 
 // Delete product (admin only)

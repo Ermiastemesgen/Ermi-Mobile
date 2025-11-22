@@ -479,10 +479,10 @@
                     <textarea id="newProductDesc" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1rem; resize: vertical;"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Product Image</label>
-                    <input type="file" id="newProductImage" accept="image/*">
-                    <small style="color: #666;">Upload a product image (JPG, PNG, GIF, WebP - Max 50MB for 4K quality)</small>
-                    <div id="newProductImagePreview" style="margin-top: 10px;"></div>
+                    <label>Product Images (Multiple)</label>
+                    <input type="file" id="newProductImage" accept="image/*" multiple>
+                    <small style="color: #666;">Upload multiple product images (JPG, PNG, GIF, WebP - Max 50MB each, up to 10 images)</small>
+                    <div id="newProductImagePreview" style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 10px;"></div>
                 </div>
                 <div class="modal-buttons">
                     <button type="submit" class="btn-save">Create Product</button>
@@ -525,10 +525,10 @@
                     <textarea id="editDescription" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1rem; resize: vertical;"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Product Image</label>
-                    <input type="file" id="editImage" accept="image/*">
-                    <small style="color: #666;">Upload a product image (JPG, PNG, GIF, WebP - Max 50MB for 4K quality)</small>
-                    <div id="imagePreview" style="margin-top: 10px;"></div>
+                    <label>Product Images (Multiple)</label>
+                    <input type="file" id="editImage" accept="image/*" multiple>
+                    <small style="color: #666;">Upload multiple product images (JPG, PNG, GIF, WebP - Max 50MB each, up to 10 images)</small>
+                    <div id="imagePreview" style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 10px;"></div>
                 </div>
                 <div class="modal-buttons">
                     <button type="submit" class="btn-save">Save Changes</button>
@@ -728,17 +728,25 @@
             }
         });
 
-        // Preview new product image
+        // Preview new product images (multiple)
         document.getElementById('newProductImage').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('newProductImagePreview').innerHTML = 
-                        '<p style="color: #666; margin-bottom: 5px;">Preview:</p>' +
-                        '<img src="' + e.target.result + '" style="max-width: 200px; border-radius: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">';
-                };
-                reader.readAsDataURL(file);
+            const files = e.target.files;
+            const preview = document.getElementById('newProductImagePreview');
+            preview.innerHTML = '';
+            
+            if (files.length > 0) {
+                preview.innerHTML = '<p style="color: #666; margin-bottom: 10px; width: 100%;">Preview (' + files.length + ' images):</p>';
+                
+                Array.from(files).forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const imgDiv = document.createElement('div');
+                        imgDiv.style.cssText = 'position: relative;';
+                        imgDiv.innerHTML = '<img src="' + e.target.result + '" style="width: 150px; height: 150px; object-fit: cover; border-radius: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"><div style="position: absolute; top: 5px; right: 5px; background: #2563eb; color: white; padding: 2px 8px; border-radius: 3px; font-size: 12px;">' + (index + 1) + '</div>';
+                        preview.appendChild(imgDiv);
+                    };
+                    reader.readAsDataURL(file);
+                });
             }
         });
 
@@ -766,19 +774,24 @@
                 console.log('Product creation response:', data);
                 
                 if (response.ok) {
-                    const imageFile = document.getElementById('newProductImage').files[0];
-                    if (imageFile) {
-                        console.log('Uploading image for product:', data.productId);
+                    const imageFiles = document.getElementById('newProductImage').files;
+                    if (imageFiles.length > 0) {
+                        console.log('Uploading', imageFiles.length, 'images for product:', data.productId);
                         const formData = new FormData();
-                        formData.append('image', imageFile);
-                        const uploadResponse = await fetch(API + '/admin/products/' + data.productId + '/upload', {
+                        
+                        // Add all images to FormData
+                        Array.from(imageFiles).forEach(file => {
+                            formData.append('images', file);
+                        });
+                        
+                        const uploadResponse = await fetch(API + '/admin/products/' + data.productId + '/upload-multiple', {
                             method: 'POST',
                             body: formData
                         });
                         const uploadData = await uploadResponse.json();
-                        console.log('Image upload response:', uploadData);
+                        console.log('Images upload response:', uploadData);
                         if (!uploadResponse.ok) {
-                            alert('⚠️ Product created but image upload failed: ' + uploadData.error);
+                            alert('⚠️ Product created but images upload failed: ' + uploadData.error);
                         }
                     }
                     
@@ -1202,7 +1215,7 @@
             }
         }
 
-        function editProduct(id) {
+        async function editProduct(id) {
             const product = currentProducts.find(p => p.id === id);
             if (!product) return;
             document.getElementById('editProductId').value = product.id;
@@ -1213,24 +1226,55 @@
             document.getElementById('editStock').value = product.stock || 100;
             document.getElementById('editDescription').value = product.description || '';
             document.getElementById('editImage').value = '';
+            
+            // Load and display existing images
             const preview = document.getElementById('imagePreview');
-            if (product.image) {
-                preview.innerHTML = '<img src="' + product.image + '" style="max-width: 200px; border-radius: 5px;">';
-            } else {
-                preview.innerHTML = '';
+            try {
+                const response = await fetch(API + '/products/' + id + '/images');
+                const data = await response.json();
+                
+                if (data.images && data.images.length > 0) {
+                    preview.innerHTML = '<p style="color: #666; margin-bottom: 10px;">Current Images (' + data.images.length + '):</p>';
+                    data.images.forEach(img => {
+                        const imgDiv = document.createElement('div');
+                        imgDiv.style.cssText = 'position: relative;';
+                        imgDiv.innerHTML = '<img src="' + img.image_url + '" style="max-width: 150px; max-height: 150px; border-radius: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">';
+                        preview.appendChild(imgDiv);
+                    });
+                } else if (product.image) {
+                    preview.innerHTML = '<p style="color: #666; margin-bottom: 10px;">Current Image:</p><img src="' + product.image + '" style="max-width: 200px; border-radius: 5px;">';
+                } else {
+                    preview.innerHTML = '<p style="color: #999;">No images yet</p>';
+                }
+            } catch (error) {
+                console.error('Error loading images:', error);
+                if (product.image) {
+                    preview.innerHTML = '<img src="' + product.image + '" style="max-width: 200px; border-radius: 5px;">';
+                } else {
+                    preview.innerHTML = '';
+                }
             }
+            
             document.getElementById('editModal').classList.add('active');
         }
 
         document.getElementById('editImage').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('imagePreview').innerHTML = 
-                        '<img src="' + e.target.result + '" style="max-width: 200px; border-radius: 5px;">';
-                };
-                reader.readAsDataURL(file);
+            const files = e.target.files;
+            const preview = document.getElementById('imagePreview');
+            
+            if (files.length > 0) {
+                preview.innerHTML = '<p style="color: #666; margin-bottom: 10px;">New Images to Add:</p>';
+                
+                Array.from(files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const imgDiv = document.createElement('div');
+                        imgDiv.style.cssText = 'position: relative;';
+                        imgDiv.innerHTML = '<img src="' + e.target.result + '" style="max-width: 150px; max-height: 150px; border-radius: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">';
+                        preview.appendChild(imgDiv);
+                    };
+                    reader.readAsDataURL(file);
+                });
             }
         });
 
@@ -1265,25 +1309,29 @@
             const id = document.getElementById('editProductId').value;
             
             try {
-                // Upload image if a new one is selected
-                const imageFile = document.getElementById('editImage').files[0];
-                if (imageFile) {
-                    console.log('Uploading new image for product:', id);
+                // Upload images if new ones are selected (supports multiple)
+                const imageFiles = document.getElementById('editImage').files;
+                if (imageFiles.length > 0) {
+                    console.log('Uploading', imageFiles.length, 'new image(s) for product:', id);
                     const formData = new FormData();
-                    formData.append('image', imageFile);
                     
-                    const uploadResponse = await fetch(API + '/admin/products/' + id + '/upload', {
+                    // Add all images to FormData
+                    Array.from(imageFiles).forEach(file => {
+                        formData.append('images', file);
+                    });
+                    
+                    const uploadResponse = await fetch(API + '/admin/products/' + id + '/upload-multiple', {
                         method: 'POST',
                         body: formData
                     });
                     
                     const uploadData = await uploadResponse.json();
-                    console.log('Image upload response:', uploadData);
+                    console.log('Images upload response:', uploadData);
                     if (!uploadResponse.ok) {
-                        alert('⚠️ Image upload failed: ' + uploadData.error);
+                        alert('⚠️ Images upload failed: ' + uploadData.error);
                         return;
                     }
-                    console.log('Image uploaded successfully');
+                    console.log('Images uploaded successfully');
                 }
                 
                 // Update product data (without image field - image is handled separately)
