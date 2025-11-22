@@ -1514,6 +1514,60 @@ app.delete('/api/admin/products/:id', (req, res) => {
     });
 });
 
+// Delete single product image (admin only)
+app.delete('/api/admin/products/images/:imageId', (req, res) => {
+    const { imageId } = req.params;
+
+    console.log('🗑️ Deleting product image:', imageId);
+
+    // Get image info before deleting
+    db.get('SELECT * FROM product_images WHERE id = ?', [imageId], (err, image) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+
+        if (!image) {
+            return res.status(404).json({ error: 'Image not found' });
+        }
+
+        const productId = image.product_id;
+
+        // Delete the image from product_images table
+        db.run('DELETE FROM product_images WHERE id = ?', [imageId], function(err) {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+
+            console.log('✅ Image deleted from product_images table');
+
+            // Update the main product image and images JSON
+            db.all('SELECT image_url FROM product_images WHERE product_id = ? ORDER BY display_order', [productId], (err, remainingImages) => {
+                if (err) {
+                    return res.status(500).json({ error: err.message });
+                }
+
+                const imageUrls = remainingImages.map(img => img.image_url);
+                const mainImage = imageUrls.length > 0 ? imageUrls[0] : null;
+
+                // Update product with new image list
+                db.run('UPDATE products SET image = ?, images = ? WHERE id = ?', 
+                    [mainImage, JSON.stringify(imageUrls), productId], (err) => {
+                        if (err) {
+                            console.log('❌ Error updating product:', err.message);
+                        }
+
+                        console.log('✅ Product images updated');
+                        res.json({
+                            success: true,
+                            message: 'Image deleted successfully',
+                            remainingImages: imageUrls.length
+                        });
+                    });
+            });
+        });
+    });
+});
+
 // Serve index.html for root route
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
@@ -1585,84 +1639,26 @@ app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-// ===== Manual Seed Endpoint (for free tier without shell access) =====
+// ===== Manual Seed Endpoint (DISABLED) =====
 app.get('/seed-database-now', async (req, res) => {
-    try {
-        // Check if already seeded
-        db.get('SELECT COUNT(*) as count FROM products', async (err, row) => {
-            if (err) {
-                return res.status(500).send(`<h1>Error: ${err.message}</h1>`);
-            }
-            
-            if (row.count > 0) {
-                return res.send(`
-                    <html>
-                        <head><title>Already Seeded</title></head>
-                        <body style="font-family: Arial; text-align: center; padding: 50px;">
-                            <h1>✅ Database Already Has Products!</h1>
-                            <p>Found ${row.count} products in database.</p>
-                            <p><a href="/">Go to Website</a> | <a href="/admin-simple.html">Go to Admin</a></p>
-                        </body>
-                    </html>
-                `);
-            }
-            
-            // Seed products
-            const products = [
-                { name: 'Wireless Earbuds Pro', price: 2500, icon: 'fa-headphones', stock: 50, description: 'Premium wireless earbuds' },
-                { name: 'Phone Case', price: 500, icon: 'fa-mobile-alt', stock: 100, description: 'Protective phone case' },
-                { name: 'Fast Charger', price: 800, icon: 'fa-charging-station', stock: 75, description: 'Quick charge adapter' },
-                { name: 'Screen Protector', price: 300, icon: 'fa-shield-alt', stock: 150, description: 'Tempered glass' },
-                { name: 'Power Bank', price: 1800, icon: 'fa-battery-full', stock: 40, description: 'Portable power bank' },
-                { name: 'USB Cable', price: 400, icon: 'fa-plug', stock: 200, description: 'USB-C cable' },
-                { name: 'Car Holder', price: 600, icon: 'fa-car', stock: 80, description: 'Car phone holder' },
-                { name: 'Bluetooth Speaker', price: 3500, icon: 'fa-volume-up', stock: 30, description: 'Portable speaker' },
-                { name: 'Selfie Stick', price: 900, icon: 'fa-camera', stock: 60, description: 'Selfie stick with tripod' },
-                { name: 'Ring Holder', price: 250, icon: 'fa-ring', stock: 120, description: 'Phone ring holder' },
-                { name: 'Wireless Charger', price: 1200, icon: 'fa-wifi', stock: 45, description: 'Wireless charging pad' },
-                { name: 'AUX Cable', price: 350, icon: 'fa-headphones-alt', stock: 90, description: 'Audio cable' }
-            ];
-            
-            // Create admin if doesn't exist
-            const hashedPassword = await bcrypt.hash('admin123', 10);
-            db.run(
-                'INSERT OR IGNORE INTO users (name, email, password, role, email_verified) VALUES (?, ?, ?, ?, ?)',
-                ['Admin', 'admin@ermimobile.com', hashedPassword, 'admin', 1]
-            );
-            
-            // Insert products
-            const stmt = db.prepare('INSERT INTO products (name, price, icon, stock, description) VALUES (?, ?, ?, ?, ?)');
-            products.forEach(p => {
-                stmt.run(p.name, p.price, p.icon, p.stock, p.description);
-            });
-            stmt.finalize(() => {
-                res.send(`
-                    <html>
-                        <head><title>Database Seeded!</title></head>
-                        <body style="font-family: Arial; text-align: center; padding: 50px; background: #f0f9ff;">
-                            <h1 style="color: #10b981;">🎉 Database Seeded Successfully!</h1>
-                            <p style="font-size: 18px;">Added ${products.length} products and admin account</p>
-                            <div style="margin: 30px 0; padding: 20px; background: white; border-radius: 10px; display: inline-block;">
-                                <h3>Admin Login:</h3>
-                                <p><strong>Email:</strong> admin@ermimobile.com</p>
-                                <p><strong>Password:</strong> admin123</p>
-                            </div>
-                            <div style="margin-top: 30px;">
-                                <a href="/" style="display: inline-block; padding: 15px 30px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px; margin: 10px;">
-                                    🏠 Go to Website
-                                </a>
-                                <a href="/admin-simple.html" style="display: inline-block; padding: 15px 30px; background: #10b981; color: white; text-decoration: none; border-radius: 8px; margin: 10px;">
-                                    👤 Go to Admin Panel
-                                </a>
-                            </div>
-                        </body>
-                    </html>
-                `);
-            });
-        });
-    } catch (error) {
-        res.status(500).send(`<h1>Error: ${error.message}</h1>`);
-    }
+    res.send(`
+        <html>
+            <head><title>Seeding Disabled</title></head>
+            <body style="font-family: Arial; text-align: center; padding: 50px; background: #f0f9ff;">
+                <h1 style="color: #ef4444;">🚫 Automatic Seeding Disabled</h1>
+                <p style="font-size: 18px; margin: 20px 0;">This endpoint has been disabled for security.</p>
+                <p style="font-size: 16px; color: #6b7280;">Please add products manually through the admin panel.</p>
+                <div style="margin-top: 30px;">
+                    <a href="/" style="display: inline-block; padding: 15px 30px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px; margin: 10px;">
+                        🏠 Go to Website
+                    </a>
+                    <a href="/admin-simple.html" style="display: inline-block; padding: 15px 30px; background: #10b981; color: white; text-decoration: none; border-radius: 8px; margin: 10px;">
+                        👤 Go to Admin Panel
+                    </a>
+                </div>
+            </body>
+        </html>
+    `);
 });
 
 // Debug endpoint to check product images
