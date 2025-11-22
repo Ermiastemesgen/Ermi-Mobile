@@ -222,7 +222,10 @@ function initializeDatabase() {
             icon TEXT NOT NULL,
             description TEXT,
             stock INTEGER DEFAULT 100,
-            image TEXT
+            image TEXT,
+            images TEXT,
+            category_id INTEGER,
+            FOREIGN KEY (category_id) REFERENCES categories(id)
         )
     `, (err) => {
         if (err) {
@@ -230,6 +233,43 @@ function initializeDatabase() {
         } else {
             console.log('✅ Products table ready');
             insertDefaultProducts();
+        }
+    });
+
+    // Product images table (for multiple images per product)
+    db.run(`
+        CREATE TABLE IF NOT EXISTS product_images (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_id INTEGER NOT NULL,
+            image_url TEXT NOT NULL,
+            display_order INTEGER DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+        )
+    `, (err) => {
+        if (err) {
+            console.error('Error creating product_images table:', err.message);
+        } else {
+            console.log('✅ Product images table ready');
+        }
+    });
+
+    // Categories table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS categories (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE NOT NULL,
+            description TEXT,
+            parent_id INTEGER,
+            image TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL
+        )
+    `, (err) => {
+        if (err) {
+            console.error('Error creating categories table:', err.message);
+        } else {
+            console.log('✅ Categories table ready');
         }
     });
 
@@ -267,6 +307,59 @@ function initializeDatabase() {
             console.error('Error creating order_items table:', err.message);
         } else {
             console.log('✅ Order items table ready');
+        }
+    });
+
+    // Contacts table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS contacts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            message TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `, (err) => {
+        if (err) {
+            console.error('Error creating contacts table:', err.message);
+        } else {
+            console.log('✅ Contacts table ready');
+        }
+    });
+
+    // Settings table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS settings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            key TEXT UNIQUE NOT NULL,
+            value TEXT,
+            description TEXT,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `, (err) => {
+        if (err) {
+            console.error('Error creating settings table:', err.message);
+        } else {
+            console.log('✅ Settings table ready');
+        }
+    });
+
+    // Add email verification columns to users table if they don't exist
+    db.run(`ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 0`, (err) => {
+        if (err && !err.message.includes('duplicate column')) {
+            console.error('Error adding email_verified column:', err.message);
+        }
+    });
+
+    db.run(`ALTER TABLE users ADD COLUMN verification_token TEXT`, (err) => {
+        if (err && !err.message.includes('duplicate column')) {
+            console.error('Error adding verification_token column:', err.message);
+        }
+    });
+
+    db.run(`ALTER TABLE users ADD COLUMN verification_token_expires DATETIME`, (err) => {
+        if (err && !err.message.includes('duplicate column')) {
+            console.error('Error adding verification_token_expires column:', err.message);
         }
     });
 }
