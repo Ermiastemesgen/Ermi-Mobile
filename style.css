@@ -528,6 +528,12 @@ body.dark-mode .theme-toggle i::before {
     font-weight: 600;
     margin-bottom: 0.5rem;
     color: var(--text-dark);
+    transition: color 0.3s ease;
+}
+
+.product-name:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
 }
 
 .product-description {

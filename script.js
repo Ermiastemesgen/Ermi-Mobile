@@ -298,7 +298,7 @@ function displayProducts() {
                 }
             </div>
             <div class="product-info">
-                <h3 class="product-name">${product.name}</h3>
+                <h3 class="product-name" onclick="filterByCategory(${product.category_id || 'null'})" style="cursor: pointer;" title="View all ${product.category_name || 'products'}">${product.name}</h3>
                 ${product.description ? '<p class="product-description">' + product.description + '</p>' : ''}
                 <p class="product-price">${product.price.toFixed(2)} Birr</p>
                 <button class="add-to-cart" onclick="addToCart(${product.id})">
