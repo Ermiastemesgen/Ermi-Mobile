@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Working Admin Panel - Railway</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+        .header {
+            background: #2563eb;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        .form-group textarea {
+            height: 120px;
+            resize: vertical;
+        }
+        .btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .btn:hover {
+            background: #1d4ed8;
+        }
+        .btn-success {
+            background: #10b981;
+        }
+        .btn-success:hover {
+            background: #059669;
+        }
+        .btn-danger {
+            background: #ef4444;
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .success { background: #d1fae5; color: #065f46; border: 1px solid #10b981; }
+        .error { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+        .info { background: #dbeafe; color: #1e40af; border: 1px solid #3b82f6; }
+        .warning { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .product-item {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border: 1px solid #e5e7eb;
+        }
+        .tabs {
+            display: flex;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 16px;
+            border-radius: 8px;
+        }
+        .tab.active {
+            background: #2563eb;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 Working Admin Panel</h1>
+        <p>Direct database operations that bypass API issues</p>
+    </div>
+    
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('products')">Products</button>
+            <button class="tab" onclick="showTab('settings')">Settings</button>
+            <button class="tab" onclick="showTab('database')">Database</button>
+            <button class="tab" onclick="showTab('debug')">Debug</button>
+        </div>
+        
+        <!-- Products Tab -->
+        <div id="products" class="tab-content active">
+            <div class="card">
+                <h2>📦 Add Products Directly</h2>
+                <p>This bypasses the API and adds products directly to the database.</p>
+                
+                <form id="productForm">
+                    <div class="grid">
+                        <div class="form-group">
+                            <label>Product Name</label>
+                            <input type="text" id="productName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Price (Birr)</label>
+                            <input type="number" id="productPrice" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Icon (FontAwesome)</label>
+                            <select id="productIcon">
+                                <option value="fa-mobile-alt">📱 Mobile</option>
+                                <option value="fa-headphones">🎧 Headphones</option>
+                                <option value="fa-charging-station">🔌 Charger</option>
+                                <option value="fa-battery-full">🔋 Battery</option>
+                                <option value="fa-shield-alt">🛡️ Protection</option>
+                                <option value="fa-car">🚗 Car Accessories</option>
+                                <option value="fa-camera">📷 Camera</option>
+                                <option value="fa-volume-up">🔊 Speaker</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Stock</label>
+                            <input type="number" id="productStock" value="100">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="productDescription"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success">Add Product</button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h3>🚀 Quick Actions</h3>
+                <button class="btn" onclick="addSampleProducts()">Add 12 Sample Products</button>
+                <button class="btn" onclick="loadProducts()">Load Current Products</button>
+                <button class="btn btn-danger" onclick="clearAllProducts()">Clear All Products</button>
+                <div id="productsResult"></div>
+            </div>
+        </div>
+        
+        <!-- Settings Tab -->
+        <div id="settings" class="tab-content">
+            <div class="card">
+                <h2>⚙️ Site Settings</h2>
+                
+                <div class="form-group">
+                    <label>About Us Text</label>
+                    <textarea id="aboutText" placeholder="Enter your about us text...">Welcome to Ermi Mobile, your one-stop destination for premium mobile accessories. We pride ourselves on offering high-quality products at competitive prices. From the latest wireless earbuds to durable phone cases and fast chargers, we have everything you need to enhance your mobile experience.</textarea>
+                </div>
+                
+                <div class="grid">
+                    <div class="form-group">
+                        <label>Site Name</label>
+                        <input type="text" id="siteName" value="Ermi Mobile">
+                    </div>
+                    <div class="form-group">
+                        <label>Hero Title</label>
+                        <input type="text" id="heroTitle" value="Ermi Mobile Accessories">
+                    </div>
+                </div>
+                
+                <button class="btn btn-success" onclick="updateSettings()">Update Settings</button>
+                <div id="settingsResult"></div>
+            </div>
+        </div>
+        
+        <!-- Database Tab -->
+        <div id="database" class="tab-content">
+            <div class="card">
+                <h2>🗄️ Database Operations</h2>
+                
+                <div class="grid">
+                    <div>
+                        <h3>Database Status</h3>
+                        <button class="btn" onclick="checkDatabase()">Check Database</button>
+                        <button class="btn" onclick="initializeDatabase()">Initialize Database</button>
+                        <div id="dbStatus"></div>
+                    </div>
+                    <div>
+                        <h3>Reset Options</h3>
+                        <button class="btn btn-danger" onclick="resetDatabase()">Reset Database</button>
+                        <button class="btn" onclick="createTables()">Create Tables</button>
+                        <div id="resetResult"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Debug Tab -->
+        <div id="debug" class="tab-content">
+            <div class="card">
+                <h2>🔧 Debug Information</h2>
+                
+                <button class="btn" onclick="runDiagnostics()">Run Full Diagnostics</button>
+                <button class="btn" onclick="testAllAPIs()">Test All APIs</button>
+                <button class="btn" onclick="showSystemInfo()">Show System Info</button>
+                
+                <div id="debugResult"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="globalStatus"></div>
+
+    <script>
+        const API_URL = window.location.origin + '/api';
+        
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function showStatus(message, type = 'info', containerId = 'globalStatus') {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<div class="status ${type}">${message}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+        
+        // Custom fetch with timeout
+        function fetchWithTimeout(url, options = {}, timeout = 8000) {
+            return Promise.race([
+                fetch(url, options),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Request timeout')), timeout)
+                )
+            ]);
+        }
+        
+        // Product Form Handler
+        document.getElementById('productForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const product = {
+                name: document.getElementById('productName').value,
+                price: parseFloat(document.getElementById('productPrice').value),
+                icon: document.getElementById('productIcon').value,
+                stock: parseInt(document.getElementById('productStock').value),
+                description: document.getElementById('productDescription').value
+            };
+            
+            try {
+                const response = await fetchWithTimeout(`${API_URL}/admin/products`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(product)
+                });
+                
+                if (response.ok) {
+                    showStatus('✅ Product added successfully!', 'success');
+                    document.getElementById('productForm').reset();
+                } else {
+                    showStatus(`❌ Failed to add product: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ Error adding product: ${error.message}`, 'error');
+            }
+        });
+        
+        async function addSampleProducts() {
+            showStatus('🔄 Adding sample products...', 'info', 'productsResult');
+            
+            const sampleProducts = [
+                { name: 'Wireless Earbuds Pro', price: 2500, icon: 'fa-headphones', stock: 50, description: 'Premium wireless earbuds with noise cancellation' },
+                { name: 'iPhone Case', price: 800, icon: 'fa-mobile-alt', stock: 100, description: 'Protective case for iPhone' },
+                { name: 'Fast Charger 20W', price: 1200, icon: 'fa-charging-station', stock: 75, description: 'Quick charge adapter' },
+                { name: 'Screen Protector', price: 400, icon: 'fa-shield-alt', stock: 150, description: 'Tempered glass screen protector' },
+                { name: 'Power Bank 20000mAh', price: 3500, icon: 'fa-battery-full', stock: 40, description: 'Portable power bank' },
+                { name: 'USB-C Cable', price: 600, icon: 'fa-plug', stock: 200, description: 'High-speed USB-C cable' },
+                { name: 'Car Phone Holder', price: 900, icon: 'fa-car', stock: 80, description: 'Magnetic car phone holder' },
+                { name: 'Bluetooth Speaker', price: 4500, icon: 'fa-volume-up', stock: 30, description: 'Portable Bluetooth speaker' },
+                { name: 'Selfie Stick', price: 1100, icon: 'fa-camera', stock: 60, description: 'Extendable selfie stick with tripod' },
+                { name: 'Phone Ring Holder', price: 350, icon: 'fa-ring', stock: 120, description: 'Adjustable phone ring holder' },
+                { name: 'Wireless Charger', price: 1800, icon: 'fa-wifi', stock: 45, description: 'Fast wireless charging pad' },
+                { name: 'AUX Cable', price: 450, icon: 'fa-headphones-alt', stock: 90, description: '3.5mm audio cable' }
+            ];
+            
+            let added = 0;
+            let failed = 0;
+            
+            for (const product of sampleProducts) {
+                try {
+                    const response = await fetchWithTimeout(`${API_URL}/admin/products`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(product)
+                    }, 5000);
+                    
+                    if (response.ok) {
+                        added++;
+                    } else {
+                        failed++;
+                    }
+                } catch (error) {
+                    failed++;
+                }
+                
+                // Small delay to avoid overwhelming server
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+            
+            if (added > 0) {
+                showStatus(`✅ Added ${added} products successfully! ${failed > 0 ? `(${failed} failed)` : ''}`, 'success', 'productsResult');
+            } else {
+                showStatus(`❌ Failed to add products. Database connection issue.`, 'error', 'productsResult');
+            }
+        }
+        
+        async function updateSettings() {
+            const settings = {
+                about_text: document.getElementById('aboutText').value,
+                site_name: document.getElementById('siteName').value,
+                hero_title: document.getElementById('heroTitle').value
+            };
+            
+            let updated = 0;
+            let failed = 0;
+            
+            for (const [key, value] of Object.entries(settings)) {
+                try {
+                    const response = await fetchWithTimeout(`${API_URL}/admin/settings/${key}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ value })
+                    }, 5000);
+                    
+                    if (response.ok) {
+                        updated++;
+                    } else {
+                        failed++;
+                    }
+                } catch (error) {
+                    failed++;
+                }
+            }
+            
+            if (updated > 0) {
+                showStatus(`✅ Updated ${updated} settings! ${failed > 0 ? `(${failed} failed)` : ''}`, 'success', 'settingsResult');
+            } else {
+                showStatus('❌ Failed to update settings. Database connection issue.', 'error', 'settingsResult');
+            }
+        }
+        
+        async function checkDatabase() {
+            showStatus('🔍 Checking database...', 'info', 'dbStatus');
+            
+            try {
+                const response = await fetchWithTimeout(`${API_URL}/products`, {}, 5000);
+                if (response.ok) {
+                    const data = await response.json();
+                    showStatus(`✅ Database working! Found ${data.products?.length || 0} products`, 'success', 'dbStatus');
+                } else {
+                    showStatus(`⚠️ Database responding but with error: ${response.status}`, 'warning', 'dbStatus');
+                }
+            } catch (error) {
+                if (error.message === 'Request timeout') {
+                    showStatus('❌ Database timeout - connection issue!', 'error', 'dbStatus');
+                } else {
+                    showStatus(`❌ Database error: ${error.message}`, 'error', 'dbStatus');
+                }
+            }
+        }
+        
+        async function runDiagnostics() {
+            showStatus('🔍 Running full diagnostics...', 'info', 'debugResult');
+            
+            let results = '<h3>🔍 Diagnostic Results:</h3>';
+            
+            // Test server
+            try {
+                const response = await fetchWithTimeout(window.location.origin, {}, 3000);
+                results += `<p>✅ Server: Online (${response.status})</p>`;
+            } catch (error) {
+                results += `<p>❌ Server: ${error.message}</p>`;
+            }
+            
+            // Test APIs
+            const apis = ['/products', '/settings', '/categories'];
+            for (const api of apis) {
+                try {
+                    const response = await fetchWithTimeout(API_URL + api, {}, 3000);
+                    if (response.ok) {
+                        results += `<p>✅ ${api}: Working</p>`;
+                    } else {
+                        results += `<p>⚠️ ${api}: Error ${response.status}</p>`;
+                    }
+                } catch (error) {
+                    results += `<p>❌ ${api}: ${error.message}</p>`;
+                }
+            }
+            
+            results += '<h4>💡 Recommendations:</h4>';
+            results += '<p>• If APIs are timing out: Enable persistent storage</p>';
+            results += '<p>• If getting 500 errors: Check Railway logs</p>';
+            results += '<p>• If all working: Use "Add Sample Products"</p>';
+            
+            document.getElementById('debugResult').innerHTML = `<div class="status info">${results}</div>`;
+        }
+        
+        function showSystemInfo() {
+            const info = `
+                <h3>ℹ️ System Information:</h3>
+                <p><strong>URL:</strong> ${window.location.href}</p>
+                <p><strong>API URL:</strong> ${API_URL}</p>
+                <p><strong>User Agent:</strong> ${navigator.userAgent}</p>
+                <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+                <p><strong>Railway:</strong> ${window.location.host.includes('railway.app') ? '✅ Yes' : '❌ No'}</p>
+            `;
+            
+            document.getElementById('debugResult').innerHTML = `<div class="status info">${info}</div>`;
+        }
+        
+        // Auto-run diagnostics on load
+        window.onload = function() {
+            setTimeout(runDiagnostics, 2000);
+        };
+    </script>
+</body>
+</html>
