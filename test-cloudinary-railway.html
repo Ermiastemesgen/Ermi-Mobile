@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Cloudinary Connection - Railway</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #2563eb;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+        .info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+        }
+        .image-preview {
+            max-width: 300px;
+            max-height: 200px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Cloudinary Connection on Railway</h1>
+        
+        <!-- Test 1: Check Configuration -->
+        <div class="test-section">
+            <h3>1. Check Cloudinary Configuration</h3>
+            <p>Test if Cloudinary environment variables are properly set on Railway.</p>
+            <button onclick="testConfig()">Test Configuration</button>
+            <div id="configResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Test 2: Test Image Upload -->
+        <div class="test-section">
+            <h3>2. Test Image Upload</h3>
+            <p>Upload a test image to verify Cloudinary connection works.</p>
+            <input type="file" id="testImage" accept="image/*">
+            <button onclick="testUpload()">Upload Test Image</button>
+            <div id="uploadResult" class="result" style="display: none;"></div>
+            <img id="uploadedImage" class="image-preview" style="display: none;">
+        </div>
+
+        <!-- Test 3: Test API Endpoints -->
+        <div class="test-section">
+            <h3>3. Test API Endpoints</h3>
+            <p>Test various API endpoints to ensure they're working.</p>
+            <button onclick="testProducts()">Test Products API</button>
+            <button onclick="testAdmin()">Test Admin API</button>
+            <div id="apiResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Test 4: Environment Info -->
+        <div class="test-section">
+            <h3>4. Environment Information</h3>
+            <p>Get information about the Railway environment.</p>
+            <button onclick="getEnvInfo()">Get Environment Info</button>
+            <div id="envResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin + '/api';
+
+        // Test 1: Configuration
+        async function testConfig() {
+            const resultDiv = document.getElementById('configResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Testing configuration...';
+            resultDiv.className = 'result info';
+
+            try {
+                const response = await fetch(API_URL + '/test/cloudinary-config');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ Configuration Test Results:
+${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Configuration Error:
+${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Network Error:
+${error.message}`;
+            }
+        }
+
+        // Test 2: Image Upload
+        async function testUpload() {
+            const fileInput = document.getElementById('testImage');
+            const resultDiv = document.getElementById('uploadResult');
+            const imagePreview = document.getElementById('uploadedImage');
+            
+            if (!fileInput.files[0]) {
+                alert('Please select an image first');
+                return;
+            }
+
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Uploading image...';
+            resultDiv.className = 'result info';
+            imagePreview.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+
+            try {
+                const response = await fetch(API_URL + '/test/cloudinary-upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ Upload Successful:
+URL: ${data.imageUrl}
+Public ID: ${data.publicId}
+Size: ${data.bytes} bytes`;
+                    
+                    // Show uploaded image
+                    imagePreview.src = data.imageUrl;
+                    imagePreview.style.display = 'block';
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Upload Failed:
+${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Upload Error:
+${error.message}`;
+            }
+        }
+
+        // Test 3: API Endpoints
+        async function testProducts() {
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Testing Products API...';
+            resultDiv.className = 'result info';
+
+            try {
+                const response = await fetch(API_URL + '/products');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ Products API Working:
+Found ${data.products?.length || 0} products
+${data.products?.length > 0 ? 'Sample: ' + data.products[0].name : 'No products yet'}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Products API Error:
+${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ API Error:
+${error.message}`;
+            }
+        }
+
+        async function testAdmin() {
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Testing Admin API...';
+            resultDiv.className = 'result info';
+
+            try {
+                const response = await fetch(API_URL + '/admin/users');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ Admin API Working:
+Found ${data.users?.length || 0} users
+Admin users: ${data.users?.filter(u => u.role === 'admin').length || 0}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Admin API Error:
+${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Admin API Error:
+${error.message}`;
+            }
+        }
+
+        // Test 4: Environment Info
+        async function getEnvInfo() {
+            const resultDiv = document.getElementById('envResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Getting environment info...';
+            resultDiv.className = 'result info';
+
+            try {
+                const response = await fetch(API_URL + '/test/env-info');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ Environment Information:
+${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Environment Error:
+${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Network Error:
+${error.message}`;
+            }
+        }
+
+        // Auto-run configuration test on page load
+        window.addEventListener('load', () => {
+            setTimeout(testConfig, 1000);
+        });
+    </script>
+</body>
+</html>

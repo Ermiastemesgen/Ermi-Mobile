@@ -1865,6 +1865,87 @@ app.get('/api/debug/products/:id', (req, res) => {
     });
 });
 
+// ===== Test API Endpoints for Railway/Cloudinary =====
+
+// Test Cloudinary configuration
+app.get('/api/test/cloudinary-config', (req, res) => {
+    const config = {
+        cloudinaryEnabled: useCloudinary,
+        hasCloudName: !!process.env.CLOUDINARY_CLOUD_NAME,
+        hasApiKey: !!process.env.CLOUDINARY_API_KEY,
+        hasApiSecret: !!process.env.CLOUDINARY_API_SECRET,
+        cloudName: process.env.CLOUDINARY_CLOUD_NAME || 'NOT_SET',
+        environment: process.env.NODE_ENV || 'development',
+        platform: 'Railway',
+        timestamp: new Date().toISOString()
+    };
+    
+    if (useCloudinary) {
+        res.json({
+            status: 'success',
+            message: '✅ Cloudinary is properly configured',
+            config: config
+        });
+    } else {
+        res.json({
+            status: 'error',
+            message: '❌ Cloudinary is not configured',
+            config: config,
+            missingVars: [
+                !process.env.CLOUDINARY_CLOUD_NAME && 'CLOUDINARY_CLOUD_NAME',
+                !process.env.CLOUDINARY_API_KEY && 'CLOUDINARY_API_KEY',
+                !process.env.CLOUDINARY_API_SECRET && 'CLOUDINARY_API_SECRET'
+            ].filter(Boolean)
+        });
+    }
+});
+
+// Test Cloudinary upload
+app.post('/api/test/cloudinary-upload', upload.single('image'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ 
+            status: 'error',
+            message: 'No image file uploaded' 
+        });
+    }
+
+    if (!useCloudinary) {
+        return res.status(500).json({ 
+            status: 'error',
+            message: 'Cloudinary not configured',
+            suggestion: 'Check environment variables'
+        });
+    }
+
+    const imagePath = req.file.path;
+    
+    res.json({
+        status: 'success',
+        message: '✅ Image uploaded successfully to Cloudinary',
+        imageUrl: imagePath,
+        publicId: req.file.filename,
+        bytes: req.file.size,
+        format: req.file.mimetype,
+        uploadedAt: new Date().toISOString()
+    });
+});
+
+// Test environment info
+app.get('/api/test/env-info', (req, res) => {
+    res.json({
+        platform: 'Railway',
+        nodeVersion: process.version,
+        environment: process.env.NODE_ENV || 'development',
+        port: PORT,
+        databasePath: dbPath,
+        cloudinaryStatus: useCloudinary ? 'Connected' : 'Not Connected',
+        emailStatus: transporter ? 'Configured' : 'Not Configured',
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString(),
+        memoryUsage: process.memoryUsage()
+    });
+});
+
 // ===== Start Server =====
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`\n🚀 Ermi Mobile Server is running!`);
