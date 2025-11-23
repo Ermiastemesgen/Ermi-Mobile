@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Railway Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border-left: 4px solid #2563eb;
+        }
+        .success { border-left-color: #10b981; background: #f0fdf4; }
+        .error { border-left-color: #ef4444; background: #fef2f2; }
+        .warning { border-left-color: #f59e0b; background: #fffbeb; }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 16px;
+        }
+        button:hover { background: #1d4ed8; }
+        pre {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+        .info-box {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Basic Railway Server Test</h1>
+        <p>This simple test will help identify if your Railway server is working.</p>
+        
+        <div class="info-box">
+            <strong>Current URL:</strong> <span id="currentUrl"></span><br>
+            <strong>Expected API:</strong> <span id="apiUrl"></span><br>
+            <strong>Time:</strong> <span id="currentTime"></span>
+        </div>
+        
+        <button onclick="testBasicConnectivity()">Test Basic Connectivity</button>
+        <button onclick="testServerResponse()">Test Server Response</button>
+        <button onclick="testAPIEndpoints()">Test API Endpoints</button>
+        <button onclick="showServerInfo()">Show Server Info</button>
+        
+        <div id="results"></div>
+        
+        <div class="info-box">
+            <h3>🆘 If All Tests Fail:</h3>
+            <p>1. <strong>Check Railway Dashboard</strong> - Is your service running?</p>
+            <p>2. <strong>Check Deployment Logs</strong> - Any error messages?</p>
+            <p>3. <strong>Check Domain</strong> - Is the URL correct?</p>
+            <p>4. <strong>Restart Service</strong> - Try redeploying in Railway</p>
+        </div>
+    </div>
+
+    <script>
+        // Set basic info
+        document.getElementById('currentUrl').textContent = window.location.href;
+        document.getElementById('apiUrl').textContent = window.location.origin + '/api';
+        document.getElementById('currentTime').textContent = new Date().toLocaleString();
+        
+        function showResult(message, type = 'test-result') {
+            const results = document.getElementById('results');
+            results.innerHTML += `<div class="${type}">${message}</div>`;
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        async function testBasicConnectivity() {
+            clearResults();
+            showResult('<h3>🌐 Testing Basic Connectivity...</h3>');
+            
+            try {
+                // Test if we can reach the server at all
+                const startTime = Date.now();
+                const response = await fetch(window.location.origin, {
+                    method: 'GET',
+                    cache: 'no-cache'
+                });
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                if (response.ok) {
+                    showResult(`✅ Server is reachable (${duration}ms)`, 'test-result success');
+                    showResult(`Status: ${response.status} ${response.statusText}`, 'test-result success');
+                } else {
+                    showResult(`⚠️ Server responded but with error: ${response.status}`, 'test-result warning');
+                }
+            } catch (error) {
+                showResult(`❌ Cannot reach server: ${error.message}`, 'test-result error');
+                showResult('This means your Railway service might be down or the URL is wrong', 'test-result error');
+            }
+        }
+        
+        async function testServerResponse() {
+            showResult('<h3>🖥️ Testing Server Response...</h3>');
+            
+            try {
+                const response = await fetch(window.location.origin + '/', {
+                    method: 'GET',
+                    cache: 'no-cache'
+                });
+                
+                if (response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    showResult(`✅ Server responding normally`, 'test-result success');
+                    showResult(`Content-Type: ${contentType}`, 'test-result success');
+                    
+                    // Try to get some content
+                    const text = await response.text();
+                    if (text.includes('Ermi Mobile') || text.includes('E Mobile')) {
+                        showResult('✅ Server is serving your website', 'test-result success');
+                    } else {
+                        showResult('⚠️ Server responding but content might be wrong', 'test-result warning');
+                    }
+                } else {
+                    showResult(`❌ Server error: ${response.status}`, 'test-result error');
+                }
+            } catch (error) {
+                showResult(`❌ Server response test failed: ${error.message}`, 'test-result error');
+            }
+        }
+        
+        async function testAPIEndpoints() {
+            showResult('<h3>🔌 Testing API Endpoints...</h3>');
+            
+            const apiBase = window.location.origin + '/api';
+            const endpoints = [
+                '/products',
+                '/settings',
+                '/categories'
+            ];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const startTime = Date.now();
+                    const response = await fetch(apiBase + endpoint, {
+                        method: 'GET',
+                        cache: 'no-cache',
+                        timeout: 5000
+                    });
+                    const endTime = Date.now();
+                    const duration = endTime - startTime;
+                    
+                    if (response.ok) {
+                        showResult(`✅ ${endpoint}: Working (${duration}ms)`, 'test-result success');
+                        
+                        // Try to parse response
+                        try {
+                            const data = await response.json();
+                            if (endpoint === '/products' && data.products) {
+                                showResult(`   📦 Found ${data.products.length} products`, 'test-result success');
+                            } else if (endpoint === '/settings' && data.settings) {
+                                showResult(`   ⚙️ Found ${Object.keys(data.settings).length} settings`, 'test-result success');
+                            }
+                        } catch (e) {
+                            showResult(`   ⚠️ Response not JSON format`, 'test-result warning');
+                        }
+                    } else {
+                        showResult(`❌ ${endpoint}: Error ${response.status}`, 'test-result error');
+                    }
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        showResult(`⏱️ ${endpoint}: Timeout (>5s)`, 'test-result error');
+                    } else {
+                        showResult(`❌ ${endpoint}: ${error.message}`, 'test-result error');
+                    }
+                }
+            }
+        }
+        
+        function showServerInfo() {
+            showResult('<h3>ℹ️ Server Information:</h3>');
+            showResult(`<strong>Current URL:</strong> ${window.location.href}`);
+            showResult(`<strong>Origin:</strong> ${window.location.origin}`);
+            showResult(`<strong>Protocol:</strong> ${window.location.protocol}`);
+            showResult(`<strong>Host:</strong> ${window.location.host}`);
+            showResult(`<strong>User Agent:</strong> ${navigator.userAgent}`);
+            showResult(`<strong>Time:</strong> ${new Date().toISOString()}`);
+            
+            // Check if this looks like a Railway URL
+            if (window.location.host.includes('railway.app')) {
+                showResult('✅ This appears to be a Railway deployment', 'test-result success');
+            } else if (window.location.host.includes('localhost')) {
+                showResult('ℹ️ This is a local development server', 'test-result');
+            } else {
+                showResult('⚠️ This might not be a Railway URL', 'test-result warning');
+            }
+        }
+        
+        // Auto-run basic test on load
+        window.onload = function() {
+            setTimeout(testBasicConnectivity, 1000);
+        };
+        
+        // Add timeout to fetch requests
+        const originalFetch = window.fetch;
+        window.fetch = function(url, options = {}) {
+            const { timeout = 8000, ...fetchOptions } = options;
+            
+            return Promise.race([
+                originalFetch(url, fetchOptions),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Request timeout')), timeout)
+                )
+            ]);
+        };
+    </script>
+</body>
+</html>

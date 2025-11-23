@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Railway Server Status</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+            text-align: center;
+        }
+        .status-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        .status-indicator {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+        }
+        .online { background: #10b981; color: white; }
+        .offline { background: #ef4444; color: white; }
+        .loading { background: #f59e0b; color: white; animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            margin: 10px;
+        }
+        button:hover { background: #1d4ed8; }
+        .info {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            text-align: left;
+        }
+        .error-details {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="status-card">
+        <h1>🚀 Railway Server Status</h1>
+        
+        <div id="statusIndicator" class="status-indicator loading">
+            ⏳
+        </div>
+        
+        <h2 id="statusText">Checking server...</h2>
+        <p id="statusDetails">Please wait while we test your Railway server.</p>
+        
+        <button onclick="checkStatus()">Check Again</button>
+        <button onclick="openMainSite()">Open Main Site</button>
+        
+        <div id="serverInfo" class="info" style="display: none;">
+            <h3>Server Information:</h3>
+            <p><strong>URL:</strong> <span id="serverUrl"></span></p>
+            <p><strong>Status:</strong> <span id="serverStatus"></span></p>
+            <p><strong>Response Time:</strong> <span id="responseTime"></span></p>
+            <p><strong>Last Check:</strong> <span id="lastCheck"></span></p>
+        </div>
+        
+        <div id="errorInfo" class="error-details" style="display: none;">
+            <h3>❌ Error Details:</h3>
+            <p id="errorMessage"></p>
+            <h4>Possible Solutions:</h4>
+            <ul>
+                <li>Check if your Railway service is running</li>
+                <li>Verify the URL is correct</li>
+                <li>Check Railway deployment logs</li>
+                <li>Try redeploying your service</li>
+                <li>Check if you have persistent storage enabled</li>
+            </ul>
+        </div>
+        
+        <div class="info">
+            <h3>🔧 Quick Actions:</h3>
+            <p>If server is offline:</p>
+            <ol>
+                <li>Go to Railway Dashboard</li>
+                <li>Check if service is running</li>
+                <li>Look at deployment logs</li>
+                <li>Try redeploying</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const serverUrl = window.location.origin;
+        document.getElementById('serverUrl').textContent = serverUrl;
+        
+        async function checkStatus() {
+            const indicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+            const statusDetails = document.getElementById('statusDetails');
+            const serverInfo = document.getElementById('serverInfo');
+            const errorInfo = document.getElementById('errorInfo');
+            
+            // Reset to loading state
+            indicator.className = 'status-indicator loading';
+            indicator.textContent = '⏳';
+            statusText.textContent = 'Checking server...';
+            statusDetails.textContent = 'Testing connection to Railway server...';
+            serverInfo.style.display = 'none';
+            errorInfo.style.display = 'none';
+            
+            try {
+                const startTime = Date.now();
+                
+                // Simple fetch with timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                
+                const response = await fetch(serverUrl, {
+                    method: 'GET',
+                    cache: 'no-cache',
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+                
+                if (response.ok) {
+                    // Server is online
+                    indicator.className = 'status-indicator online';
+                    indicator.textContent = '✅';
+                    statusText.textContent = 'Server is Online!';
+                    statusDetails.textContent = 'Your Railway server is working correctly.';
+                    
+                    // Show server info
+                    document.getElementById('serverStatus').textContent = `${response.status} ${response.statusText}`;
+                    document.getElementById('responseTime').textContent = `${responseTime}ms`;
+                    document.getElementById('lastCheck').textContent = new Date().toLocaleString();
+                    serverInfo.style.display = 'block';
+                    
+                    // Test API endpoints
+                    testAPIQuick();
+                    
+                } else {
+                    // Server responded but with error
+                    indicator.className = 'status-indicator offline';
+                    indicator.textContent = '⚠️';
+                    statusText.textContent = 'Server Error';
+                    statusDetails.textContent = `Server responded with error: ${response.status} ${response.statusText}`;
+                    
+                    document.getElementById('errorMessage').textContent = 
+                        `HTTP ${response.status}: ${response.statusText}`;
+                    errorInfo.style.display = 'block';
+                }
+                
+            } catch (error) {
+                // Server is offline or unreachable
+                indicator.className = 'status-indicator offline';
+                indicator.textContent = '❌';
+                statusText.textContent = 'Server is Offline';
+                
+                if (error.name === 'AbortError') {
+                    statusDetails.textContent = 'Server is not responding (timeout after 10 seconds).';
+                    document.getElementById('errorMessage').textContent = 
+                        'Connection timeout - server is not responding';
+                } else {
+                    statusDetails.textContent = `Cannot connect to server: ${error.message}`;
+                    document.getElementById('errorMessage').textContent = error.message;
+                }
+                
+                errorInfo.style.display = 'block';
+            }
+        }
+        
+        async function testAPIQuick() {
+            try {
+                const apiResponse = await fetch(serverUrl + '/api/products', {
+                    method: 'GET',
+                    cache: 'no-cache'
+                });
+                
+                if (apiResponse.ok) {
+                    statusDetails.textContent += ' API endpoints are also working.';
+                } else {
+                    statusDetails.textContent += ' However, API endpoints may have issues.';
+                }
+            } catch (error) {
+                statusDetails.textContent += ' API endpoints are not responding.';
+            }
+        }
+        
+        function openMainSite() {
+            window.open(serverUrl, '_blank');
+        }
+        
+        // Auto-check on page load
+        window.onload = function() {
+            setTimeout(checkStatus, 1000);
+        };
+        
+        // Auto-refresh every 30 seconds
+        setInterval(checkStatus, 30000);
+    </script>
+</body>
+</html>
