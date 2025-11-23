@@ -381,6 +381,8 @@ function initializeDatabase() {
             console.error('Error creating settings table:', err.message);
         } else {
             console.log('✅ Settings table ready');
+            // Initialize essential settings automatically
+            initializeEssentialSettings();
         }
     });
 
@@ -516,6 +518,84 @@ async function ensureMainAdmin() {
             }
         } catch (error) {
             console.error('Error processing main admin:', error);
+        }
+    });
+}
+
+// ===== Initialize Essential Settings =====
+function initializeEssentialSettings() {
+    console.log('🔧 Initializing essential settings...');
+    
+    const essentialSettings = [
+        { key: 'about_text', value: 'Welcome to Ermi Mobile, your one-stop destination for premium mobile accessories. We pride ourselves on offering high-quality products at competitive prices. From the latest wireless earbuds to durable phone cases and fast chargers, we have everything you need to enhance your mobile experience. Our commitment to customer satisfaction and product excellence has made us a trusted name in mobile accessories. Shop with confidence and discover the perfect accessories for your devices today!' },
+        { key: 'site_name', value: 'Ermi Mobile' },
+        { key: 'hero_title', value: 'Ermi Mobile Accessories' },
+        { key: 'hero_subtitle', value: 'Best And Quality Mobile Accessories' },
+        { key: 'hero_button_text', value: 'Shop Now' },
+        { key: 'primary_color', value: '#2563eb' },
+        { key: 'text_color', value: '#1f2937' },
+        { key: 'telebirr_name', value: 'Ermias Temesgen' },
+        { key: 'telebirr_phone', value: '+251935303564' },
+        { key: 'telebirr_instructions', value: 'ከከፈሉ በኋላ ደረሰኝ መላኮን እንዳይረሱ' },
+        { key: 'cbe_name', value: 'Ermias Temesgen' },
+        { key: 'cbe_account', value: '+251935303564' },
+        { key: 'cbe_instructions', value: 'ከከፈሉ በኋላ ደረሰኝ መላኮን እንዳይረሱ' },
+        { key: 'bank_name', value: 'Commercial Bank of Ethiopia' },
+        { key: 'bank_account_name', value: 'Ermias Temesgen' },
+        { key: 'bank_account_number', value: '1000297017873' },
+        { key: 'bank_instructions', value: 'ከከፈሉ በኋላ ደረሰኝ መላኮን እንዳይረሱ' }
+    ];
+
+    // Check if settings already exist, if not insert them
+    db.get('SELECT COUNT(*) as count FROM settings', [], (err, row) => {
+        if (err) {
+            console.error('❌ Error checking settings count:', err.message);
+            return;
+        }
+
+        if (row.count === 0) {
+            console.log('📝 No settings found, inserting essential settings...');
+            const stmt = db.prepare('INSERT OR IGNORE INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)');
+            
+            essentialSettings.forEach(setting => {
+                stmt.run(setting.key, setting.value, (err) => {
+                    if (err) {
+                        console.error(`❌ Error inserting ${setting.key}:`, err.message);
+                    } else {
+                        console.log(`✅ ${setting.key} initialized`);
+                    }
+                });
+            });
+            
+            stmt.finalize(() => {
+                console.log('🎉 Essential settings initialized successfully!');
+            });
+        } else {
+            // Just ensure about_text exists
+            db.get('SELECT * FROM settings WHERE key = ?', ['about_text'], (err, aboutRow) => {
+                if (err) {
+                    console.error('❌ Error checking about_text:', err.message);
+                    return;
+                }
+
+                if (!aboutRow) {
+                    console.log('📝 About text missing, adding it...');
+                    const aboutSetting = essentialSettings.find(s => s.key === 'about_text');
+                    db.run(
+                        'INSERT INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)',
+                        [aboutSetting.key, aboutSetting.value],
+                        (err) => {
+                            if (err) {
+                                console.error('❌ Error adding about_text:', err.message);
+                            } else {
+                                console.log('✅ About text added successfully!');
+                            }
+                        }
+                    );
+                } else {
+                    console.log('✅ About text already exists in database');
+                }
+            });
         }
     });
 }
@@ -1762,6 +1842,16 @@ app.get('/api/settings', (req, res) => {
             });
             res.json({ settings });
         }
+    });
+});
+
+// Force refresh/initialize settings (for debugging)
+app.post('/api/settings/refresh', (req, res) => {
+    console.log('🔄 Force refreshing settings...');
+    initializeEssentialSettings();
+    res.json({ 
+        success: true, 
+        message: 'Settings refresh initiated. Check server logs for details.' 
     });
 });
 
