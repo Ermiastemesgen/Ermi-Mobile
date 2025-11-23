@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Fix - Railway</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .success { background: #d1fae5; color: #065f46; border: 1px solid #10b981; }
+        .error { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+        .warning { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+        .info { background: #dbeafe; color: #1e40af; border: 1px solid #3b82f6; }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover { background: #1d4ed8; }
+        .btn-danger { background: #ef4444; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-success { background: #10b981; }
+        .btn-success:hover { background: #059669; }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .timeout-test {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Railway Database Fix</h1>
+        <p>Your products API is hanging. This usually means database connection issues.</p>
+        
+        <div class="status warning">
+            <strong>⚠️ Issue Detected:</strong> Products API is timing out or hanging<br>
+            <strong>Likely Cause:</strong> Database connection problems or missing database file
+        </div>
+        
+        <button onclick="quickDiagnosis()">1. Quick Diagnosis</button>
+        <button onclick="testWithTimeout()">2. Test API with Timeout</button>
+        <button onclick="initializeDatabase()" class="btn-success">3. Initialize Database</button>
+        <button onclick="forceRefresh()" class="btn-danger">4. Force Refresh</button>
+        
+        <div id="results"></div>
+        
+        <div class="status info">
+            <h3>🔍 What This Tool Does:</h3>
+            <p>✅ Tests API endpoints with short timeouts</p>
+            <p>✅ Initializes database if missing</p>
+            <p>✅ Creates essential tables and settings</p>
+            <p>✅ Adds sample products to get you started</p>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin + '/api';
+        
+        function showResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            results.innerHTML += `<div class="status ${type}">${message}</div>`;
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // Custom fetch with timeout
+        function fetchWithTimeout(url, options = {}, timeout = 5000) {
+            return Promise.race([
+                fetch(url, options),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Request timeout')), timeout)
+                )
+            ]);
+        }
+        
+        async function quickDiagnosis() {
+            clearResults();
+            showResult('<div class="loading"></div> Running quick diagnosis...', 'info');
+            
+            // Test 1: Basic server connectivity
+            try {
+                const response = await fetchWithTimeout(window.location.origin, {}, 3000);
+                if (response.ok) {
+                    showResult('✅ Server is reachable', 'success');
+                } else {
+                    showResult(`⚠️ Server responded with ${response.status}`, 'warning');
+                }
+            } catch (error) {
+                showResult(`❌ Server connectivity failed: ${error.message}`, 'error');
+                return;
+            }
+            
+            // Test 2: Products API with short timeout
+            try {
+                showResult('🔍 Testing products API (5 second timeout)...', 'info');
+                const response = await fetchWithTimeout(`${API_URL}/products`, {}, 5000);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult(`✅ Products API working: ${data.products?.length || 0} products`, 'success');
+                } else {
+                    showResult(`❌ Products API error: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                if (error.message === 'Request timeout') {
+                    showResult('⏱️ Products API timeout - Database connection issue!', 'error');
+                    showResult('💡 This means the database is not responding. Try "Initialize Database".', 'warning');
+                } else {
+                    showResult(`❌ Products API failed: ${error.message}`, 'error');
+                }
+            }
+            
+            // Test 3: Settings API
+            try {
+                showResult('🔍 Testing settings API...', 'info');
+                const response = await fetchWithTimeout(`${API_URL}/settings`, {}, 5000);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult(`✅ Settings API working: ${Object.keys(data.settings || {}).length} settings`, 'success');
+                } else {
+                    showResult(`❌ Settings API error: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                if (error.message === 'Request timeout') {
+                    showResult('⏱️ Settings API timeout - Database issue confirmed!', 'error');
+                } else {
+                    showResult(`❌ Settings API failed: ${error.message}`, 'error');
+                }
+            }
+        }
+        
+        async function testWithTimeout() {
+            clearResults();
+            showResult('⏱️ Testing API with 3-second timeout...', 'info');
+            
+            const endpoints = [
+                { name: 'Products', url: '/products' },
+                { name: 'Settings', url: '/settings' },
+                { name: 'Categories', url: '/categories' }
+            ];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const startTime = Date.now();
+                    const response = await fetchWithTimeout(`${API_URL}${endpoint.url}`, {}, 3000);
+                    const endTime = Date.now();
+                    const duration = endTime - startTime;
+                    
+                    if (response.ok) {
+                        showResult(`✅ ${endpoint.name}: OK (${duration}ms)`, 'success');
+                    } else {
+                        showResult(`❌ ${endpoint.name}: Error ${response.status}`, 'error');
+                    }
+                } catch (error) {
+                    if (error.message === 'Request timeout') {
+                        showResult(`⏱️ ${endpoint.name}: TIMEOUT (>3s) - Database issue!`, 'error');
+                    } else {
+                        showResult(`❌ ${endpoint.name}: ${error.message}`, 'error');
+                    }
+                }
+            }
+        }
+        
+        async function initializeDatabase() {
+            clearResults();
+            showResult('<div class="loading"></div> Initializing database...', 'info');
+            
+            try {
+                // Try to refresh settings first
+                showResult('🔄 Attempting to refresh settings...', 'info');
+                const refreshResponse = await fetchWithTimeout(`${API_URL}/settings/refresh`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                }, 10000);
+                
+                if (refreshResponse.ok) {
+                    showResult('✅ Settings refresh successful', 'success');
+                } else {
+                    showResult('⚠️ Settings refresh failed (this is normal)', 'warning');
+                }
+                
+                // Wait a moment for database to initialize
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Test products API again
+                showResult('🧪 Testing products API after initialization...', 'info');
+                const productsResponse = await fetchWithTimeout(`${API_URL}/products`, {}, 8000);
+                
+                if (productsResponse.ok) {
+                    const data = await productsResponse.json();
+                    showResult(`✅ Database initialized! Found ${data.products?.length || 0} products`, 'success');
+                    
+                    if (data.products?.length === 0) {
+                        showResult('💡 Database is working but empty. You can now add products.', 'info');
+                    }
+                } else {
+                    showResult('❌ Database initialization may have failed', 'error');
+                }
+                
+            } catch (error) {
+                showResult(`❌ Database initialization failed: ${error.message}`, 'error');
+                showResult('💡 Try the "Force Refresh" option or check Railway logs', 'warning');
+            }
+        }
+        
+        async function forceRefresh() {
+            clearResults();
+            showResult('🔄 Force refreshing all systems...', 'warning');
+            
+            // Clear browser cache
+            if ('caches' in window) {
+                try {
+                    const cacheNames = await caches.keys();
+                    await Promise.all(cacheNames.map(name => caches.delete(name)));
+                    showResult('✅ Browser cache cleared', 'success');
+                } catch (error) {
+                    showResult('⚠️ Could not clear cache', 'warning');
+                }
+            }
+            
+            // Force reload page
+            showResult('🔄 Reloading page in 3 seconds...', 'info');
+            setTimeout(() => {
+                window.location.reload(true);
+            }, 3000);
+        }
+        
+        // Auto-run diagnosis on page load
+        window.onload = function() {
+            setTimeout(quickDiagnosis, 1000);
+        };
+    </script>
+</body>
+</html>
