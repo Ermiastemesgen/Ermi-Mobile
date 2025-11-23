@@ -381,8 +381,8 @@ function initializeDatabase() {
             console.error('Error creating settings table:', err.message);
         } else {
             console.log('✅ Settings table ready');
-            // Initialize essential settings automatically
-            initializeEssentialSettings();
+            // DISABLED: No automatic settings initialization
+            console.log('ℹ️  Auto-settings disabled - configure manually via admin panel');
         }
     });
 
