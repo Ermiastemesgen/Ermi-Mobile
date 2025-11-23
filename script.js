@@ -1062,6 +1062,30 @@ signupForm.addEventListener('submit', async (e) => {
     }
 });
 
+// ===== Force Update About Text (for debugging) =====
+window.forceUpdateAboutText = async function() {
+    console.log('🔧 Force updating About text...');
+    try {
+        const response = await fetch(`${API_URL}/settings`);
+        const data = await response.json();
+        const aboutText = document.getElementById('aboutText');
+        
+        if (data.settings.about_text && aboutText) {
+            aboutText.textContent = data.settings.about_text;
+            console.log('✅ About text force updated successfully!');
+            return true;
+        } else {
+            console.log('❌ Failed to force update about text');
+            console.log('Settings has about_text:', !!data.settings.about_text);
+            console.log('Element found:', !!aboutText);
+            return false;
+        }
+    } catch (error) {
+        console.error('❌ Error force updating about text:', error);
+        return false;
+    }
+};
+
 // ===== Load Site Settings =====
 async function loadSiteSettings() {
     try {
@@ -1096,18 +1120,33 @@ async function loadSiteSettings() {
             heroSection.style.backgroundAttachment = 'fixed';
         }
         
-        // Update about text
+        // Update about text with retry mechanism
         console.log('🔍 About text from settings:', settings.about_text);
-        const aboutText = document.getElementById('aboutText');
-        console.log('🔍 About text element found:', !!aboutText);
+        const updateAboutText = () => {
+            const aboutText = document.getElementById('aboutText');
+            console.log('🔍 About text element found:', !!aboutText);
+            
+            if (settings.about_text && aboutText) {
+                console.log('✅ Updating about text');
+                aboutText.textContent = settings.about_text;
+                return true;
+            } else if (!settings.about_text) {
+                console.log('⚠️ No about_text in settings');
+                return false;
+            } else if (!aboutText) {
+                console.log('⚠️ aboutText element not found');
+                return false;
+            }
+            return false;
+        };
         
-        if (settings.about_text && aboutText) {
-            console.log('✅ Updating about text');
-            aboutText.textContent = settings.about_text;
-        } else if (!settings.about_text) {
-            console.log('⚠️ No about_text in settings');
-        } else if (!aboutText) {
-            console.log('⚠️ aboutText element not found');
+        // Try to update immediately
+        if (!updateAboutText()) {
+            // If failed, retry after a short delay
+            setTimeout(() => {
+                console.log('🔄 Retrying about text update...');
+                updateAboutText();
+            }, 500);
         }
         
         // Apply color settings
@@ -1273,10 +1312,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ===== Initialize on Page Load =====
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 DOM loaded, initializing...');
     loadSiteSettings();
     checkUserSession();
     fetchProducts();
     updateCart();
+    
+    // Multiple retry attempts for settings loading
+    setTimeout(() => {
+        console.log('🔄 Retrying settings load (2s)...');
+        loadSiteSettings();
+    }, 2000);
+    
+    setTimeout(() => {
+        console.log('🔄 Final settings load attempt (5s)...');
+        loadSiteSettings();
+    }, 5000);
 });
 
 // ===== Add fadeOut animation for notifications =====

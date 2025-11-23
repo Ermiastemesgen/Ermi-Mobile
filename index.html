@@ -374,5 +374,66 @@
     </div>
 
     <script src="script.js"></script>
+    
+    <!-- About Us Text Fix Script -->
+    <script>
+        // Ensure About Us text loads correctly
+        function ensureAboutTextLoads() {
+            const API_URL = window.location.hostname === 'localhost' 
+                ? 'http://localhost:3000/api' 
+                : `${window.location.origin}/api`;
+            
+            console.log('🔧 Ensuring About Us text loads...');
+            
+            async function updateAboutText() {
+                try {
+                    const response = await fetch(`${API_URL}/settings`);
+                    if (!response.ok) {
+                        console.log('❌ Settings API not available');
+                        return false;
+                    }
+                    
+                    const data = await response.json();
+                    const aboutElement = document.getElementById('aboutText');
+                    
+                    if (data.settings?.about_text && aboutElement) {
+                        aboutElement.textContent = data.settings.about_text;
+                        console.log('✅ About Us text updated successfully');
+                        return true;
+                    } else {
+                        console.log('⚠️ About text or element not found');
+                        console.log('Has about_text:', !!data.settings?.about_text);
+                        console.log('Has element:', !!aboutElement);
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('❌ Error updating about text:', error);
+                    return false;
+                }
+            }
+            
+            // Try multiple times with increasing delays
+            const attempts = [500, 2000, 5000];
+            attempts.forEach((delay, index) => {
+                setTimeout(async () => {
+                    console.log(`🔄 About text update attempt ${index + 1}...`);
+                    const success = await updateAboutText();
+                    if (success) {
+                        console.log('🎉 About text loaded successfully!');
+                    }
+                }, delay);
+            });
+        }
+        
+        // Run when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', ensureAboutTextLoads);
+        } else {
+            ensureAboutTextLoads();
+        }
+        
+        // Also make it available globally for manual testing
+        window.ensureAboutTextLoads = ensureAboutTextLoads;
+    </script>
 </body>
 </html>
