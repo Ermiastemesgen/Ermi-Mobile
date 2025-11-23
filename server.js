@@ -639,11 +639,15 @@ async function createDefaultAccounts() {
 }
 
 // ===== Insert Default Products =====
-// DISABLED: Auto-seeding disabled - add products manually via admin panel
+// PERMANENTLY DISABLED: Auto-seeding disabled - add products manually via admin panel
 function insertDefaultProducts() {
-    // Automatic product seeding is disabled
-    // Add your own products via the admin panel
-    console.log('ℹ️  Auto-seeding disabled - add products manually via admin panel');
+    // Automatic product seeding is PERMANENTLY DISABLED
+    // This function will never add products automatically
+    console.log('🚫 Auto-seeding PERMANENTLY DISABLED - add products manually via admin panel');
+    console.log('💡 To add products: Use /admin.html or run manual scripts');
+    
+    // Double-check: ensure no products are added accidentally
+    return false;
 }
 
 // ===== API Routes =====
