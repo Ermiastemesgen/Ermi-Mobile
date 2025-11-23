@@ -1097,11 +1097,17 @@ async function loadSiteSettings() {
         }
         
         // Update about text
-        if (settings.about_text) {
-            const aboutText = document.getElementById('aboutText');
-            if (aboutText) {
-                aboutText.textContent = settings.about_text;
-            }
+        console.log('🔍 About text from settings:', settings.about_text);
+        const aboutText = document.getElementById('aboutText');
+        console.log('🔍 About text element found:', !!aboutText);
+        
+        if (settings.about_text && aboutText) {
+            console.log('✅ Updating about text');
+            aboutText.textContent = settings.about_text;
+        } else if (!settings.about_text) {
+            console.log('⚠️ No about_text in settings');
+        } else if (!aboutText) {
+            console.log('⚠️ aboutText element not found');
         }
         
         // Apply color settings
