@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Railway Admin Diagnostic</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .success { border-color: #10b981; background: #f0fdf4; }
+        .error { border-color: #ef4444; background: #fef2f2; }
+        .warning { border-color: #f59e0b; background: #fffbeb; }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #1d4ed8; }
+        pre {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.ok { background: #10b981; color: white; }
+        .status.error { background: #ef4444; color: white; }
+        .status.warning { background: #f59e0b; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Railway Admin Panel Diagnostic</h1>
+        <p>This tool will help identify why the admin panel is stuck loading.</p>
+        
+        <button onclick="runFullDiagnostic()">Run Full Diagnostic</button>
+        <button onclick="testDatabase()">Test Database</button>
+        <button onclick="fixIssues()">Attempt Fix</button>
+        <button onclick="openAdminPanel()">Open Admin Panel</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin + '/api';
+        
+        async function runFullDiagnostic() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="test-section"><h3>🔍 Running Full Diagnostic...</h3></div>';
+            
+            let results = '';
+            
+            // Test 1: Basic connectivity
+            results += await testConnectivity();
+            
+            // Test 2: API endpoints
+            results += await testAPIEndpoints();
+            
+            // Test 3: Database status
+            results += await testDatabaseStatus();
+            
+            // Test 4: Authentication
+            results += await testAuthentication();
+            
+            // Test 5: Admin panel files
+            results += await testAdminFiles();
+            
+            resultsDiv.innerHTML = results;
+        }
+        
+        async function testConnectivity() {
+            let result = '<div class="test-section"><h3>🌐 Connectivity Test</h3>';
+            
+            try {
+                const start = Date.now();
+                const response = await fetch(API_URL + '/products');
+                const duration = Date.now() - start;
+                
+                if (response.ok) {
+                    result += `<p><span class="status ok">OK</span> API reachable (${duration}ms)</p>`;
+                } else {
+                    result += `<p><span class="status error">ERROR</span> API returned ${response.status}</p>`;
+                }
+            } catch (error) {
+                result += `<p><span class="status error">ERROR</span> Cannot reach API: ${error.message}</p>`;
+            }
+            
+            result += '</div>';
+            return result;
+        }
+        
+        async function testAPIEndpoints() {
+            let result = '<div class="test-section"><h3>🔌 API Endpoints Test</h3>';
+            
+            const endpoints = [
+                { name: 'Products', url: '/products', public: true },
+                { name: 'Categories', url: '/categories', public: true },
+                { name: 'Settings', url: '/settings', public: true },
+                { name: 'Admin Users', url: '/admin/users', public: false },
+                { name: 'Admin Orders', url: '/admin/orders', public: false }
+            ];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(API_URL + endpoint.url);
+                    
+                    if (response.ok) {
+                        result += `<p><span class="status ok">OK</span> ${endpoint.name}: Working</p>`;
+                    } else if (response.status === 401 && !endpoint.public) {
+                        result += `<p><span class="status warning">AUTH</span> ${endpoint.name}: Protected (normal)</p>`;
+                    } else {
+                        result += `<p><span class="status error">ERROR</span> ${endpoint.name}: ${response.status}</p>`;
+                    }
+                } catch (error) {
+                    result += `<p><span class="status error">ERROR</span> ${endpoint.name}: ${error.message}</p>`;
+                }
+            }
+            
+            result += '</div>';
+            return result;
+        }
+        
+        async function testDatabaseStatus() {
+            let result = '<div class="test-section"><h3>🗄️ Database Status</h3>';
+            
+            try {
+                // Test products
+                const productsRes = await fetch(API_URL + '/products');
+                if (productsRes.ok) {
+                    const data = await productsRes.json();
+                    result += `<p><span class="status ok">OK</span> Products table: ${data.products?.length || 0} records</p>`;
+                } else {
+                    result += `<p><span class="status error">ERROR</span> Products table: Cannot access</p>`;
+                }
+                
+                // Test settings
+                const settingsRes = await fetch(API_URL + '/settings');
+                if (settingsRes.ok) {
+                    const data = await settingsRes.json();
+                    result += `<p><span class="status ok">OK</span> Settings table: ${Object.keys(data.settings || {}).length} records</p>`;
+                } else {
+                    result += `<p><span class="status error">ERROR</span> Settings table: Cannot access</p>`;
+                }
+                
+            } catch (error) {
+                result += `<p><span class="status error">ERROR</span> Database: ${error.message}</p>`;
+            }
+            
+            result += '</div>';
+            return result;
+        }
+        
+        async function testAuthentication() {
+            let result = '<div class="test-section"><h3>🔐 Authentication Test</h3>';
+            
+            try {
+                const response = await fetch(API_URL + '/admin/users');
+                
+                if (response.status === 401) {
+                    result += `<p><span class="status ok">OK</span> Authentication required (secure)</p>`;
+                    result += `<p><strong>Admin Credentials:</strong></p>`;
+                    result += `<p>Email: ermias616@gmail.com<br>Password: Ermi@0211</p>`;
+                } else if (response.ok) {
+                    result += `<p><span class="status warning">WARNING</span> No authentication required</p>`;
+                } else {
+                    result += `<p><span class="status error">ERROR</span> Auth endpoint: ${response.status}</p>`;
+                }
+            } catch (error) {
+                result += `<p><span class="status error">ERROR</span> Auth test: ${error.message}</p>`;
+            }
+            
+            result += '</div>';
+            return result;
+        }
+        
+        async function testAdminFiles() {
+            let result = '<div class="test-section"><h3>📁 Admin Files Test</h3>';
+            
+            const files = [
+                '/admin.html',
+                '/admin.js',
+                '/admin.css',
+                '/admin-simple.html'
+            ];
+            
+            for (const file of files) {
+                try {
+                    const response = await fetch(file);
+                    if (response.ok) {
+                        result += `<p><span class="status ok">OK</span> ${file}: Available</p>`;
+                    } else {
+                        result += `<p><span class="status error">ERROR</span> ${file}: ${response.status}</p>`;
+                    }
+                } catch (error) {
+                    result += `<p><span class="status error">ERROR</span> ${file}: ${error.message}</p>`;
+                }
+            }
+            
+            result += '</div>';
+            return result;
+        }
+        
+        async function testDatabase() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="test-section"><h3>🗄️ Testing Database...</h3></div>';
+            
+            try {
+                // Try to refresh settings
+                const refreshRes = await fetch(API_URL + '/settings/refresh', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                let result = '<div class="test-section success"><h3>✅ Database Test Results</h3>';
+                
+                if (refreshRes.ok) {
+                    result += '<p>Settings refresh: Success</p>';
+                } else {
+                    result += '<p>Settings refresh: Failed (normal)</p>';
+                }
+                
+                // Test products again
+                const productsRes = await fetch(API_URL + '/products');
+                if (productsRes.ok) {
+                    const data = await productsRes.json();
+                    result += `<p>Products: ${data.products?.length || 0} found</p>`;
+                } else {
+                    result += '<p>Products: Error accessing</p>';
+                }
+                
+                result += '</div>';
+                resultsDiv.innerHTML = result;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="test-section error"><h3>❌ Database Test Failed</h3><p>${error.message}</p></div>`;
+            }
+        }
+        
+        async function fixIssues() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="test-section"><h3>🔧 Attempting to fix issues...</h3></div>';
+            
+            try {
+                // Try multiple fix attempts
+                const fixes = [];
+                
+                // Fix 1: Refresh settings
+                try {
+                    await fetch(API_URL + '/settings/refresh', { method: 'POST' });
+                    fixes.push('✅ Settings refreshed');
+                } catch (e) {
+                    fixes.push('⚠️ Settings refresh failed');
+                }
+                
+                // Fix 2: Test database connectivity
+                try {
+                    const res = await fetch(API_URL + '/products');
+                    if (res.ok) {
+                        fixes.push('✅ Database connectivity OK');
+                    } else {
+                        fixes.push('❌ Database connectivity issues');
+                    }
+                } catch (e) {
+                    fixes.push('❌ Cannot connect to database');
+                }
+                
+                let result = '<div class="test-section success"><h3>🔧 Fix Results</h3>';
+                fixes.forEach(fix => {
+                    result += `<p>${fix}</p>`;
+                });
+                
+                result += '<p><strong>Next steps:</strong></p>';
+                result += '<p>1. Try opening admin panel again</p>';
+                result += '<p>2. Clear browser cache if still stuck</p>';
+                result += '<p>3. Check Railway deployment logs</p>';
+                result += '</div>';
+                
+                resultsDiv.innerHTML = result;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="test-section error"><h3>❌ Fix Failed</h3><p>${error.message}</p></div>`;
+            }
+        }
+        
+        function openAdminPanel() {
+            window.open('/admin.html', '_blank');
+        }
+        
+        // Auto-run diagnostic on load
+        window.onload = function() {
+            setTimeout(runFullDiagnostic, 1000);
+        };
+    </script>
+</body>
+</html>

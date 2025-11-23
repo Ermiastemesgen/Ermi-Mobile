@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel Loading Fix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        .result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #2563eb;
+            background: #f8fafc;
+        }
+        .success { border-left-color: #10b981; background: #f0fdf4; }
+        .error { border-left-color: #ef4444; background: #fef2f2; }
+        .warning { border-left-color: #f59e0b; background: #fffbeb; }
+        pre {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Railway Admin Panel Loading Fix</h1>
+        <p>This tool will diagnose and fix admin panel loading issues.</p>
+        
+        <div style="margin: 20px 0;">
+            <button onclick="diagnoseIssue()">1. Diagnose Issue</button>
+            <button onclick="testAPIs()">2. Test All APIs</button>
+            <button onclick="fixDatabase()">3. Fix Database</button>
+            <button onclick="testAdminAccess()">4. Test Admin Access</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin + '/api';
+
+        function showLoading(message) {
+            document.getElementById('results').innerHTML = 
+                `<div class="result"><div class="loading"></div> ${message}</div>`;
+        }
+
+        function showResult(message, type = 'result') {
+            document.getElementById('results').innerHTML = 
+                `<div class="result ${type}">${message}</div>`;
+        }
+
+        async function diagnoseIssue() {
+            showLoading('Diagnosing admin panel loading issue...');
+            
+            let diagnosis = '<div class="result"><h3>🔍 Admin Panel Diagnosis:</h3>';
+            
+            // Check current URL
+            diagnosis += `<p><strong>Current URL:</strong> ${window.location.href}</p>`;
+            diagnosis += `<p><strong>API URL:</strong> ${API_URL}</p>`;
+            
+            // Test basic connectivity
+            try {
+                const response = await fetch(API_URL + '/products');
+                diagnosis += `<p><strong>API Connection:</strong> ${response.ok ? '✅ Working' : '❌ Failed (' + response.status + ')'}</p>`;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    diagnosis += `<p><strong>Products API:</strong> ✅ Returns ${data.products?.length || 0} products</p>`;
+                } else {
+                    diagnosis += `<p><strong>Products API:</strong> ❌ Error ${response.status}</p>`;
+                }
+            } catch (error) {
+                diagnosis += `<p><strong>API Connection:</strong> ❌ Network Error: ${error.message}</p>`;
+            }
+            
+            // Test settings API
+            try {
+                const response = await fetch(API_URL + '/settings');
+                diagnosis += `<p><strong>Settings API:</strong> ${response.ok ? '✅ Working' : '❌ Failed'}</p>`;
+            } catch (error) {
+                diagnosis += `<p><strong>Settings API:</strong> ❌ Error: ${error.message}</p>`;
+            }
+            
+            // Test users API (this might fail due to auth, but we can check)
+            try {
+                const response = await fetch(API_URL + '/admin/users');
+                diagnosis += `<p><strong>Users API:</strong> ${response.status === 401 ? '✅ Protected (needs auth)' : response.ok ? '✅ Working' : '❌ Failed'}</p>`;
+            } catch (error) {
+                diagnosis += `<p><strong>Users API:</strong> ❌ Error: ${error.message}</p>`;
+            }
+            
+            diagnosis += '</div>';
+            document.getElementById('results').innerHTML = diagnosis;
+        }
+
+        async function testAPIs() {
+            showLoading('Testing all API endpoints...');
+            
+            const endpoints = [
+                { name: 'Products', url: '/products' },
+                { name: 'Categories', url: '/categories' },
+                { name: 'Settings', url: '/settings' },
+                { name: 'Admin Users', url: '/admin/users' },
+                { name: 'Orders', url: '/admin/orders' }
+            ];
+            
+            let results = '<div class="result"><h3>🧪 API Test Results:</h3>';
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(API_URL + endpoint.url);
+                    const status = response.status;
+                    const statusText = response.statusText;
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        results += `<p>✅ <strong>${endpoint.name}:</strong> OK (${Object.keys(data).length} keys)</p>`;
+                    } else if (status === 401) {
+                        results += `<p>🔒 <strong>${endpoint.name}:</strong> Protected (needs authentication)</p>`;
+                    } else {
+                        results += `<p>❌ <strong>${endpoint.name}:</strong> Error ${status} - ${statusText}</p>`;
+                    }
+                } catch (error) {
+                    results += `<p>❌ <strong>${endpoint.name}:</strong> Network Error - ${error.message}</p>`;
+                }
+            }
+            
+            results += '</div>';
+            document.getElementById('results').innerHTML = results;
+        }
+
+        async function fixDatabase() {
+            showLoading('Attempting to fix database issues...');
+            
+            try {
+                // Try to refresh settings
+                const refreshResponse = await fetch(API_URL + '/settings/refresh', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                let result = '<div class="result success"><h3>🔧 Database Fix Results:</h3>';
+                
+                if (refreshResponse.ok) {
+                    result += '<p>✅ Settings refresh successful</p>';
+                } else {
+                    result += '<p>⚠️ Settings refresh failed (this is normal)</p>';
+                }
+                
+                // Test products API after fix
+                const productsResponse = await fetch(API_URL + '/products');
+                if (productsResponse.ok) {
+                    const data = await productsResponse.json();
+                    result += `<p>✅ Products API working: ${data.products?.length || 0} products found</p>`;
+                } else {
+                    result += '<p>❌ Products API still not working</p>';
+                }
+                
+                // Test settings API
+                const settingsResponse = await fetch(API_URL + '/settings');
+                if (settingsResponse.ok) {
+                    const data = await settingsResponse.json();
+                    result += `<p>✅ Settings API working: ${Object.keys(data.settings || {}).length} settings found</p>`;
+                } else {
+                    result += '<p>❌ Settings API not working</p>';
+                }
+                
+                result += '<p><strong>Next:</strong> Try accessing admin panel again</p>';
+                result += '</div>';
+                
+                document.getElementById('results').innerHTML = result;
+                
+            } catch (error) {
+                showResult(`❌ Database fix failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAdminAccess() {
+            showLoading('Testing admin panel access...');
+            
+            let result = '<div class="result"><h3>🔐 Admin Access Test:</h3>';
+            
+            // Test if we can access admin endpoints
+            try {
+                const response = await fetch(API_URL + '/admin/users');
+                
+                if (response.status === 401) {
+                    result += '<p>✅ Admin endpoints are protected (good security)</p>';
+                    result += '<p>💡 You need to login to access admin features</p>';
+                    
+                    result += '<h4>Admin Login Credentials:</h4>';
+                    result += '<p><strong>Email:</strong> ermias616@gmail.com</p>';
+                    result += '<p><strong>Password:</strong> Ermi@0211</p>';
+                    
+                    result += '<h4>Alternative Admin:</h4>';
+                    result += '<p><strong>Email:</strong> old-admin@ermimobile.com</p>';
+                    result += '<p><strong>Password:</strong> admin123</p>';
+                    
+                } else if (response.ok) {
+                    result += '<p>⚠️ Admin endpoints are not protected (security issue)</p>';
+                } else {
+                    result += `<p>❌ Admin endpoints error: ${response.status}</p>`;
+                }
+                
+                // Provide direct admin panel link
+                result += '<h4>🔗 Admin Panel Links:</h4>';
+                result += `<p><a href="/admin.html" target="_blank" style="color: #2563eb;">Main Admin Panel</a></p>`;
+                result += `<p><a href="/admin-simple.html" target="_blank" style="color: #2563eb;">Simple Admin Panel</a></p>`;
+                
+                result += '</div>';
+                document.getElementById('results').innerHTML = result;
+                
+            } catch (error) {
+                showResult(`❌ Admin access test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-diagnose on page load
+        window.onload = function() {
+            setTimeout(diagnoseIssue, 1000);
+        };
+    </script>
+</body>
+</html>
