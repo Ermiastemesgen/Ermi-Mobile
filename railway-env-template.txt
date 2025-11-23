@@ -1,0 +1,22 @@
+# Railway Environment Variables
+# Copy these to your Railway dashboard under Variables tab
+
+# Required
+NODE_ENV=production
+PORT=3000
+
+# Cloudinary (for image storage)
+CLOUDINARY_CLOUD_NAME=your_cloud_name_here
+CLOUDINARY_API_KEY=your_api_key_here
+CLOUDINARY_API_SECRET=your_api_secret_here
+
+# Email (for notifications)
+EMAIL_USER=real64377@gmail.com
+EMAIL_PASS=ylmghokmxfzlrnrr
+
+# Admin credentials
+ADMIN_EMAIL=ermias616@gmail.com
+ADMIN_PASSWORD=your_admin_password
+
+# Website URL (Railway will provide this)
+WEBSITE_URL=https://your-project.railway.app
