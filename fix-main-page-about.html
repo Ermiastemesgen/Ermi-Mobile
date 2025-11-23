@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Page About Us Fix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .fix-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 350px;
+            background: white;
+            border: 2px solid #2563eb;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 10000;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .fix-panel h3 {
+            margin: 0 0 15px 0;
+            color: #2563eb;
+        }
+        .fix-panel button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px 0;
+            width: 100%;
+            font-size: 14px;
+        }
+        .fix-panel button:hover {
+            background: #1d4ed8;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .success { background: #d1fae5; color: #065f46; border: 1px solid #10b981; }
+        .error { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+        .info { background: #dbeafe; color: #1e40af; border: 1px solid #3b82f6; }
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            width: auto;
+        }
+        pre {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            overflow-x: auto;
+            max-height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="fix-panel" id="fixPanel">
+        <button class="close-btn" onclick="document.getElementById('fixPanel').style.display='none'">&times;</button>
+        <h3>🔧 About Us Fix Panel</h3>
+        <button onclick="diagnoseIssue()">1. Diagnose Issue</button>
+        <button onclick="fixAboutText()">2. Fix About Text</button>
+        <button onclick="testMainPage()">3. Test Main Page</button>
+        <button onclick="showDebugInfo()">4. Show Debug Info</button>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin + '/api';
+        
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        async function diagnoseIssue() {
+            showStatus('🔍 Diagnosing About Us text issue...', 'info');
+            
+            let diagnosis = '<div class="status info"><h4>🔍 Diagnosis Results:</h4>';
+            
+            // Check if we're on the main page
+            const isMainPage = window.location.pathname === '/' || window.location.pathname === '/index.html';
+            diagnosis += `<p>📍 On main page: ${isMainPage ? '✅ YES' : '❌ NO'}</p>`;
+            
+            // Check if aboutText element exists
+            const aboutElement = document.getElementById('aboutText');
+            diagnosis += `<p>📍 aboutText element: ${aboutElement ? '✅ FOUND' : '❌ NOT FOUND'}</p>`;
+            
+            if (aboutElement) {
+                diagnosis += `<p>📝 Current text length: ${aboutElement.textContent.length} chars</p>`;
+                diagnosis += `<p>📝 Current text preview: "${aboutElement.textContent.substring(0, 50)}..."</p>`;
+            }
+            
+            // Test API
+            try {
+                const response = await fetch(`${API_URL}/settings`);
+                const data = await response.json();
+                diagnosis += `<p>🌐 API response: ${response.ok ? '✅ OK' : '❌ ERROR'}</p>`;
+                diagnosis += `<p>📝 about_text in API: ${data.settings?.about_text ? '✅ FOUND' : '❌ NOT FOUND'}</p>`;
+                
+                if (data.settings?.about_text) {
+                    diagnosis += `<p>📏 API text length: ${data.settings.about_text.length} chars</p>`;
+                }
+            } catch (error) {
+                diagnosis += `<p>🌐 API error: ❌ ${error.message}</p>`;
+            }
+            
+            // Check if loadSiteSettings function exists
+            diagnosis += `<p>🔧 loadSiteSettings function: ${typeof window.loadSiteSettings === 'function' ? '✅ FOUND' : '❌ NOT FOUND'}</p>`;
+            
+            diagnosis += '</div>';
+            document.getElementById('status').innerHTML = diagnosis;
+        }
+
+        async function fixAboutText() {
+            showStatus('🔧 Attempting to fix About Us text...', 'info');
+            
+            try {
+                // Get settings from API
+                const response = await fetch(`${API_URL}/settings`);
+                const data = await response.json();
+                
+                if (!data.settings?.about_text) {
+                    showStatus('❌ No about_text found in API. Try refreshing settings first.', 'error');
+                    return;
+                }
+                
+                // Find the element
+                let aboutElement = document.getElementById('aboutText');
+                
+                if (!aboutElement) {
+                    // Try to find it by class or other selectors
+                    aboutElement = document.querySelector('.about-text');
+                }
+                
+                if (!aboutElement) {
+                    showStatus('❌ Could not find aboutText element on page.', 'error');
+                    return;
+                }
+                
+                // Update the text
+                aboutElement.textContent = data.settings.about_text;
+                
+                showStatus('✅ About Us text updated successfully! Check the About section on the page.', 'success');
+                
+                // Scroll to about section
+                const aboutSection = document.getElementById('about');
+                if (aboutSection) {
+                    aboutSection.scrollIntoView({ behavior: 'smooth' });
+                }
+                
+            } catch (error) {
+                showStatus(`❌ Error fixing about text: ${error.message}`, 'error');
+            }
+        }
+
+        async function testMainPage() {
+            showStatus('🧪 Testing main page About Us section...', 'info');
+            
+            // Scroll to about section
+            const aboutSection = document.getElementById('about');
+            if (aboutSection) {
+                aboutSection.scrollIntoView({ behavior: 'smooth' });
+                
+                setTimeout(() => {
+                    const aboutElement = document.getElementById('aboutText');
+                    if (aboutElement) {
+                        const text = aboutElement.textContent;
+                        const isDefault = text.includes('Welcome to Ermi Mobile, your one-stop destination');
+                        
+                        showStatus(
+                            `📝 About section text: ${isDefault ? '✅ CUSTOM TEXT' : '⚠️ DEFAULT TEXT'}<br>` +
+                            `📏 Length: ${text.length} characters<br>` +
+                            `📝 Preview: "${text.substring(0, 100)}..."`,
+                            isDefault ? 'success' : 'error'
+                        );
+                    } else {
+                        showStatus('❌ About text element not found', 'error');
+                    }
+                }, 1000);
+            } else {
+                showStatus('❌ About section not found', 'error');
+            }
+        }
+
+        async function showDebugInfo() {
+            showStatus('📊 Gathering debug information...', 'info');
+            
+            const debugInfo = {
+                url: window.location.href,
+                pathname: window.location.pathname,
+                aboutElement: !!document.getElementById('aboutText'),
+                aboutSection: !!document.getElementById('about'),
+                loadSiteSettings: typeof window.loadSiteSettings,
+                forceUpdateAboutText: typeof window.forceUpdateAboutText,
+                apiUrl: API_URL
+            };
+            
+            // Test API
+            try {
+                const response = await fetch(`${API_URL}/settings`);
+                const data = await response.json();
+                debugInfo.apiWorking = response.ok;
+                debugInfo.aboutTextInApi = !!data.settings?.about_text;
+                debugInfo.aboutTextLength = data.settings?.about_text?.length || 0;
+            } catch (error) {
+                debugInfo.apiError = error.message;
+            }
+            
+            const debugHtml = `
+                <div class="status info">
+                    <h4>📊 Debug Information:</h4>
+                    <pre>${JSON.stringify(debugInfo, null, 2)}</pre>
+                    <p><strong>Instructions:</strong></p>
+                    <ol>
+                        <li>If aboutElement is false, the element is missing</li>
+                        <li>If apiWorking is false, there's a server issue</li>
+                        <li>If aboutTextInApi is false, settings need to be refreshed</li>
+                        <li>Copy this info if you need to report the issue</li>
+                    </ol>
+                </div>
+            `;
+            
+            document.getElementById('status').innerHTML = debugHtml;
+        }
+
+        // Auto-diagnose on load
+        window.onload = function() {
+            setTimeout(diagnoseIssue, 1000);
+        };
+    </script>
+</body>
+</html>
