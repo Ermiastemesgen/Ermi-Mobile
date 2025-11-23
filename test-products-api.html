@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Products API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        button:hover { background: #1d4ed8; }
+        .result {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #2563eb;
+            background: #f8fafc;
+        }
+        .success { border-left-color: #10b981; background: #f0fdf4; }
+        .error { border-left-color: #ef4444; background: #fef2f2; }
+        pre {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 14px;
+            max-height: 400px;
+        }
+        .api-url {
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Products API Test</h1>
+        <p>Test your Railway products API to see why products aren't showing.</p>
+        
+        <div class="api-url">
+            <strong>API URL:</strong> <span id="apiUrl"></span>
+        </div>
+        
+        <button onclick="testProductsAPI()">Test Products API</button>
+        <button onclick="testSettingsAPI()">Test Settings API</button>
+        <button onclick="testCategoriesAPI()">Test Categories API</button>
+        <button onclick="clearResults()">Clear Results</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin + '/api';
+        document.getElementById('apiUrl').textContent = API_URL;
+        
+        function showResult(title, content, type = 'result') {
+            const results = document.getElementById('results');
+            results.innerHTML += `
+                <div class="${type}">
+                    <h3>${title}</h3>
+                    ${content}
+                </div>
+            `;
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        async function testProductsAPI() {
+            showResult('🔍 Testing Products API...', 'Fetching products from server...');
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${API_URL}/products`);
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const products = data.products || [];
+                    
+                    let content = `
+                        <p><strong>Status:</strong> ✅ Success (${response.status})</p>
+                        <p><strong>Response Time:</strong> ${duration}ms</p>
+                        <p><strong>Products Found:</strong> ${products.length}</p>
+                    `;
+                    
+                    if (products.length === 0) {
+                        content += `
+                            <p style="color: #ef4444;"><strong>⚠️ Issue Found:</strong> No products in database!</p>
+                            <p><strong>Solution:</strong> Use the "Quick Add Products" tool to add sample products.</p>
+                        `;
+                    } else {
+                        content += '<p><strong>Sample Products:</strong></p>';
+                        products.slice(0, 5).forEach(product => {
+                            content += `<p>• ${product.name} - ${product.price} Birr (Stock: ${product.stock})</p>`;
+                        });
+                        
+                        if (products.length > 5) {
+                            content += `<p>... and ${products.length - 5} more products</p>`;
+                        }
+                    }
+                    
+                    content += '<p><strong>Raw API Response:</strong></p>';
+                    content += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    
+                    showResult('✅ Products API Response', content, products.length > 0 ? 'success' : 'error');
+                    
+                } else {
+                    showResult('❌ Products API Error', `
+                        <p><strong>Status:</strong> ${response.status} ${response.statusText}</p>
+                        <p><strong>Response Time:</strong> ${duration}ms</p>
+                        <p><strong>Error:</strong> Server returned an error</p>
+                    `, 'error');
+                }
+                
+            } catch (error) {
+                showResult('❌ Products API Failed', `
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p><strong>Possible Causes:</strong></p>
+                    <ul>
+                        <li>Server is not responding</li>
+                        <li>Database connection failed</li>
+                        <li>Network connectivity issues</li>
+                    </ul>
+                `, 'error');
+            }
+        }
+        
+        async function testSettingsAPI() {
+            showResult('🔍 Testing Settings API...', 'Fetching settings from server...');
+            
+            try {
+                const response = await fetch(`${API_URL}/settings`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const settings = data.settings || {};
+                    const settingsCount = Object.keys(settings).length;
+                    
+                    let content = `
+                        <p><strong>Status:</strong> ✅ Success</p>
+                        <p><strong>Settings Count:</strong> ${settingsCount}</p>
+                        <p><strong>About Text:</strong> ${settings.about_text ? '✅ Found' : '❌ Missing'}</p>
+                        <p><strong>Site Name:</strong> ${settings.site_name || 'Not set'}</p>
+                    `;
+                    
+                    content += '<p><strong>Raw Settings:</strong></p>';
+                    content += `<pre>${JSON.stringify(settings, null, 2)}</pre>`;
+                    
+                    showResult('✅ Settings API Response', content, 'success');
+                    
+                } else {
+                    showResult('❌ Settings API Error', `
+                        <p><strong>Status:</strong> ${response.status} ${response.statusText}</p>
+                    `, 'error');
+                }
+                
+            } catch (error) {
+                showResult('❌ Settings API Failed', `
+                    <p><strong>Error:</strong> ${error.message}</p>
+                `, 'error');
+            }
+        }
+        
+        async function testCategoriesAPI() {
+            showResult('🔍 Testing Categories API...', 'Fetching categories from server...');
+            
+            try {
+                const response = await fetch(`${API_URL}/categories`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const categories = data.categories || [];
+                    
+                    let content = `
+                        <p><strong>Status:</strong> ✅ Success</p>
+                        <p><strong>Categories Found:</strong> ${categories.length}</p>
+                    `;
+                    
+                    if (categories.length > 0) {
+                        content += '<p><strong>Categories:</strong></p>';
+                        categories.forEach(cat => {
+                            content += `<p>• ${cat.name}</p>`;
+                        });
+                    }
+                    
+                    content += '<p><strong>Raw Response:</strong></p>';
+                    content += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    
+                    showResult('✅ Categories API Response', content, 'success');
+                    
+                } else {
+                    showResult('❌ Categories API Error', `
+                        <p><strong>Status:</strong> ${response.status} ${response.statusText}</p>
+                    `, 'error');
+                }
+                
+            } catch (error) {
+                showResult('❌ Categories API Failed', `
+                    <p><strong>Error:</strong> ${error.message}</p>
+                `, 'error');
+            }
+        }
+        
+        // Auto-test products API on load
+        window.onload = function() {
+            setTimeout(testProductsAPI, 1000);
+        };
+    </script>
+</body>
+</html>

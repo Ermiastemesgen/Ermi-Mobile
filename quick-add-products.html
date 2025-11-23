@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Add Products - Railway</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .success { background: #d1fae5; color: #065f46; border: 1px solid #10b981; }
+        .error { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+        .info { background: #dbeafe; color: #1e40af; border: 1px solid #3b82f6; }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            margin: 10px 5px;
+        }
+        button:hover { background: #1d4ed8; }
+        .btn-success { background: #10b981; }
+        .btn-success:hover { background: #059669; }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        pre {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Quick Add Products to Railway</h1>
+        <p>Your server is online but no products are showing. Let's fix this quickly!</p>
+        
+        <div class="status info">
+            <strong>Current Status:</strong> Server online, database empty or no products
+        </div>
+        
+        <button onclick="checkProducts()">1. Check Current Products</button>
+        <button onclick="addSampleProducts()" class="btn-success">2. Add Sample Products</button>
+        <button onclick="testMainPage()">3. Test Main Page</button>
+        
+        <div id="results"></div>
+        
+        <div class="status info">
+            <h3>📋 What This Will Do:</h3>
+            <p>✅ Add 12 sample products to your Railway database</p>
+            <p>✅ Products will appear on your main page immediately</p>
+            <p>✅ You can edit/delete these products later via admin panel</p>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin + '/api';
+        
+        function showResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            results.innerHTML += `<div class="status ${type}">${message}</div>`;
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        async function checkProducts() {
+            clearResults();
+            showResult('<div class="loading"></div> Checking current products...', 'info');
+            
+            try {
+                const response = await fetch(`${API_URL}/products`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const count = data.products ? data.products.length : 0;
+                    
+                    if (count === 0) {
+                        showResult('❌ No products found in database. This is why your main page is empty.', 'error');
+                        showResult('💡 Click "Add Sample Products" to fix this.', 'info');
+                    } else {
+                        showResult(`✅ Found ${count} products in database.`, 'success');
+                        showResult('🤔 If main page still shows no products, there might be a frontend issue.', 'info');
+                        
+                        // Show first few products
+                        const sampleProducts = data.products.slice(0, 3);
+                        let productList = '<h4>Sample products:</h4>';
+                        sampleProducts.forEach(p => {
+                            productList += `<p>• ${p.name} - ${p.price} Birr</p>`;
+                        });
+                        showResult(productList, 'success');
+                    }
+                } else {
+                    showResult(`❌ Products API error: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Error checking products: ${error.message}`, 'error');
+            }
+        }
+        
+        async function addSampleProducts() {
+            clearResults();
+            showResult('<div class="loading"></div> Adding sample products...', 'info');
+            
+            const sampleProducts = [
+                { name: 'Wireless Earbuds Pro', price: 2500, icon: 'fa-headphones', stock: 50, description: 'Premium wireless earbuds with noise cancellation' },
+                { name: 'iPhone Case', price: 800, icon: 'fa-mobile-alt', stock: 100, description: 'Protective case for iPhone' },
+                { name: 'Fast Charger 20W', price: 1200, icon: 'fa-charging-station', stock: 75, description: 'Quick charge adapter' },
+                { name: 'Screen Protector', price: 400, icon: 'fa-shield-alt', stock: 150, description: 'Tempered glass screen protector' },
+                { name: 'Power Bank 20000mAh', price: 3500, icon: 'fa-battery-full', stock: 40, description: 'Portable power bank' },
+                { name: 'USB-C Cable', price: 600, icon: 'fa-plug', stock: 200, description: 'High-speed USB-C cable' },
+                { name: 'Car Phone Holder', price: 900, icon: 'fa-car', stock: 80, description: 'Magnetic car phone holder' },
+                { name: 'Bluetooth Speaker', price: 4500, icon: 'fa-volume-up', stock: 30, description: 'Portable Bluetooth speaker' },
+                { name: 'Selfie Stick', price: 1100, icon: 'fa-camera', stock: 60, description: 'Extendable selfie stick with tripod' },
+                { name: 'Phone Ring Holder', price: 350, icon: 'fa-ring', stock: 120, description: 'Adjustable phone ring holder' },
+                { name: 'Wireless Charger', price: 1800, icon: 'fa-wifi', stock: 45, description: 'Fast wireless charging pad' },
+                { name: 'AUX Cable', price: 450, icon: 'fa-headphones-alt', stock: 90, description: '3.5mm audio cable' }
+            ];
+            
+            let added = 0;
+            let errors = 0;
+            
+            for (let i = 0; i < sampleProducts.length; i++) {
+                const product = sampleProducts[i];
+                
+                try {
+                    const response = await fetch(`${API_URL}/admin/products`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(product)
+                    });
+                    
+                    if (response.ok) {
+                        added++;
+                        showResult(`✅ Added: ${product.name}`, 'success');
+                    } else {
+                        errors++;
+                        showResult(`❌ Failed to add: ${product.name} (${response.status})`, 'error');
+                    }
+                } catch (error) {
+                    errors++;
+                    showResult(`❌ Error adding ${product.name}: ${error.message}`, 'error');
+                }
+                
+                // Small delay to avoid overwhelming the server
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            if (added > 0) {
+                showResult(`🎉 Successfully added ${added} products!`, 'success');
+                showResult('✅ Your main page should now show products.', 'success');
+                showResult('💡 Refresh your main page to see the products.', 'info');
+            } else {
+                showResult('❌ Failed to add any products. Check server logs.', 'error');
+            }
+            
+            if (errors > 0) {
+                showResult(`⚠️ ${errors} products failed to add.`, 'error');
+            }
+        }
+        
+        function testMainPage() {
+            showResult('🌐 Opening main page in new tab...', 'info');
+            window.open(window.location.origin, '_blank');
+            showResult('💡 Check if products are now visible on the main page.', 'info');
+        }
+        
+        // Auto-check products on page load
+        window.onload = function() {
+            setTimeout(checkProducts, 1000);
+        };
+    </script>
+</body>
+</html>
