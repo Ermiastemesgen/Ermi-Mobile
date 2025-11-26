@@ -425,6 +425,28 @@ function initializeDatabase() {
     setTimeout(() => {
         syncProductImages();
     }, 1000);
+    
+    // Auto-seed database if empty (localhost development)
+    setTimeout(() => {
+        if (process.env.NODE_ENV !== 'production') {
+            try {
+                require('./auto-seed-localhost.js');
+            } catch (error) {
+                console.log('ℹ️  Auto-seed file not found or error:', error.message);
+            }
+        }
+    }, 2000);
+    
+    // Auto-seed database if empty (Railway deployment)
+    setTimeout(() => {
+        if (process.env.NODE_ENV === 'production') {
+            try {
+                require('./auto-seed-railway.js');
+            } catch (error) {
+                console.log('ℹ️  Auto-seed file not found or error:', error.message);
+            }
+        }
+    }, 2000);
 }
 
 // ===== Sync Product Images =====
