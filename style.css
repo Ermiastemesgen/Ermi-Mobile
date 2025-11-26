@@ -163,6 +163,35 @@ header {
     }
 }
 
+/* Language Toggle Button */
+.language-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-light);
+    color: var(--text-dark);
+    border: 2px solid var(--border-color);
+    border-radius: 25px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.language-toggle:hover {
+    background: var(--primary-color);
+    color: var(--white);
+    border-color: var(--primary-color);
+    transform: scale(1.05);
+}
+
+.language-toggle i {
+    font-size: 1.1rem;
+}
+
 /* Theme Toggle Button */
 .theme-toggle {
     display: flex;

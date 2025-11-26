@@ -301,14 +301,19 @@ function displayProducts() {
             <div class="product-info">
                 <h3 class="product-name" onclick="filterByCategory(${product.category_id || 'null'})" style="cursor: pointer;" title="View all ${product.category_name || 'products'}">${product.name}</h3>
                 ${product.description ? '<p class="product-description">' + product.description + '</p>' : ''}
-                <p class="product-price">${product.price.toFixed(2)} Birr</p>
+                <p class="product-price">${product.price.toFixed(2)} <span data-translate="birr">Birr</span></p>
                 <button class="add-to-cart" onclick="addToCart(${product.id})">
-                    <i class="fas fa-cart-plus"></i> Add to Cart
+                    <i class="fas fa-cart-plus"></i> <span data-translate="addToCart">Add to Cart</span>
                 </button>
             </div>
         `;
         productsGrid.appendChild(productCard);
     });
+    
+    // Update translations for newly added elements
+    if (typeof updatePageLanguage === 'function') {
+        updatePageLanguage();
+    }
 }
 
 // ===== Image Lightbox Functions =====

@@ -20,12 +20,15 @@
                     <span id="siteName">Ermi Mobile</span>
                 </a>
                 <ul class="nav-menu">
-                    <li><a href="#home" class="nav-link">Home</a></li>
-                    <li><a href="#products" class="nav-link">Products</a></li>
-                    <li><a href="#about" class="nav-link">About</a></li>
-                    <li><a href="#contact" class="nav-link">Contact</a></li>
+                    <li><a href="#home" class="nav-link" data-translate="home">Home</a></li>
+                    <li><a href="#products" class="nav-link" data-translate="products">Products</a></li>
+                    <li><a href="#about" class="nav-link" data-translate="about">About</a></li>
+                    <li><a href="#contact" class="nav-link" data-translate="contact">Contact</a></li>
                 </ul>
                 <div class="header-actions">
+                    <button class="language-toggle" id="languageToggle" title="Switch language" onclick="toggleLanguage()">
+                        <i class="fas fa-language"></i> አማ
+                    </button>
                     <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode">
                         <i class="fas fa-moon"></i>
                     </button>
@@ -33,7 +36,7 @@
                         <i class="fas fa-phone"></i>
                     </a>
                     <button class="login-button" id="loginButton">
-                        <i class="fas fa-user"></i> Login
+                        <i class="fas fa-user"></i> <span data-translate="login">Login</span>
                     </button>
                     <div class="cart-icon" id="cartIcon">
                         <i class="fas fa-shopping-cart"></i>
@@ -68,15 +71,15 @@
     <!-- Products Section -->
     <section id="products" class="products">
         <div class="container">
-            <h2 class="section-title">Our Products</h2>
+            <h2 class="section-title" data-translate="ourProducts">Our Products</h2>
             <div class="search-container">
-                <input type="text" id="searchInput" class="search-input" placeholder="Search products...">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search products..." data-translate="searchProducts">
                 <button class="search-button" id="searchButton">
-                    <i class="fas fa-search"></i> Search
+                    <i class="fas fa-search"></i> <span data-translate="search">Search</span>
                 </button>
             </div>
             <div class="category-filter" id="categoryFilter">
-                <button class="filter-btn active" data-category="all">All Products</button>
+                <button class="filter-btn active" data-category="all" data-translate="allProducts">All Products</button>
             </div>
             <div class="products-grid" id="productsGrid">
                 <!-- Products will be dynamically loaded here -->
@@ -87,8 +90,8 @@
     <!-- About Section -->
     <section id="about" class="about">
         <div class="container">
-            <h2 class="section-title">About Ermi Mobile</h2>
-            <p class="about-text" id="aboutText">
+            <h2 class="section-title" data-translate="aboutTitle">About Ermi Mobile</h2>
+            <p class="about-text" id="aboutText" data-translate="aboutText">
                 Welcome to Ermi Mobile, your one-stop destination for premium mobile accessories. 
                 We pride ourselves on offering high-quality products at competitive prices. 
                 From the latest wireless earbuds to durable phone cases and fast chargers, 
@@ -434,6 +437,39 @@
         
         // Also make it available globally for manual testing
         window.ensureAboutTextLoads = ensureAboutTextLoads;
+    </script>
+
+    <!-- Translation System -->
+    <script src="translations.js"></script>
+    <script>
+        // Language toggle function
+        function toggleLanguage() {
+            const newLang = currentLanguage === 'en' ? 'am' : 'en';
+            switchLanguage(newLang);
+        }
+
+        // Listen for language changes to update dynamic content
+        document.addEventListener('languageChanged', (e) => {
+            const lang = e.detail.language;
+            
+            // Update hero section if it exists
+            const heroTitle = document.querySelector('.hero-content h1');
+            const heroSubtitle = document.querySelector('.hero-content p');
+            const heroButton = document.querySelector('.hero-content .cta-button');
+            
+            if (heroTitle) heroTitle.textContent = t('heroTitle');
+            if (heroSubtitle) heroSubtitle.textContent = t('heroSubtitle');
+            if (heroButton) heroButton.textContent = t('shopNow');
+            
+            // Update product cards
+            document.querySelectorAll('.product-card .add-to-cart').forEach(btn => {
+                btn.innerHTML = `<i class="fas fa-shopping-cart"></i> ${t('addToCart')}`;
+            });
+            
+            // Update cart modal if open
+            const cartTitle = document.querySelector('.cart-modal h2');
+            if (cartTitle) cartTitle.textContent = t('yourCart');
+        });
     </script>
 </body>
 </html>
