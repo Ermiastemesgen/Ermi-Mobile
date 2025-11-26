@@ -2040,6 +2040,15 @@ app.get('/api/test/env-info', (req, res) => {
     });
 });
 
+// ===== Health Check Endpoint =====
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 // ===== Start Server =====
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`\n🚀 Ermi Mobile Server is running!`);
