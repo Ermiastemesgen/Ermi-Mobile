@@ -7,6 +7,9 @@ const RAILWAY_URL = 'https://ermimobile.up.railway.app';
 const ADMIN_EMAIL = 'ermias616@gmail.com';
 const ADMIN_PASSWORD = 'Ermi@0211';
 
+// Alternative: Try without authentication first
+const USE_AUTH = false;
+
 console.log('🗑️  Power Bank Deletion Script for Railway');
 console.log('==========================================\n');
 
