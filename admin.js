@@ -145,9 +145,9 @@ async function loadProducts() {
         const tbody = document.getElementById('productsTableBody');
         
         if (data.products && data.products.length > 0) {
-            tbody.innerHTML = data.products.map(product => `
+            tbody.innerHTML = data.products.map((product, index) => `
                 <tr>
-                    <td>${product.id}</td>
+                    <td>${index + 1}</td>
                     <td>${product.name}</td>
                     <td>${product.price.toFixed(2)}</td>
                     <td><i class="fas ${product.icon}"></i></td>
@@ -158,7 +158,7 @@ async function loadProducts() {
                     </td>
                 </tr>
             `).join('');
-            console.log('Products table updated');
+            console.log('Products table updated with', data.products.length, 'products');
         } else {
             tbody.innerHTML = '<tr><td colspan="6">No products found</td></tr>';
         }
