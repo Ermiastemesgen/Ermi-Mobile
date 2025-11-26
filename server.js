@@ -427,25 +427,26 @@ function initializeDatabase() {
     }, 1000);
     
     // Auto-seed database if empty (localhost development)
-    setTimeout(() => {
-        if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== 'production') {
+        setTimeout(() => {
             try {
                 require('./auto-seed-localhost.js');
             } catch (error) {
-                console.log('ℹ️  Auto-seed file not found or error:', error.message);
+                console.log('ℹ️  Localhost auto-seed skipped:', error.message);
             }
-        }
-    }, 2000);
+        }, 2000);
+    }
     
     // Auto-seed database if empty (Railway deployment)
-    setTimeout(() => {
-        if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === 'production') {
+        setTimeout(() => {
             try {
                 require('./auto-seed-railway.js');
             } catch (error) {
-                console.log('ℹ️  Auto-seed file not found or error:', error.message);
+                console.log('ℹ️  Railway auto-seed skipped:', error.message);
             }
-        }
+        }, 2000);
+    }
     }, 2000);
 }
 
