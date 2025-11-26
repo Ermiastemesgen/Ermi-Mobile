@@ -361,6 +361,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ===== Add to Cart Function =====
 function addToCart(productId) {
+    // Check if user is logged in
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    
+    if (!currentUser) {
+        // User not logged in - show login modal
+        showNotification('Please login to add items to cart', 'error');
+        openLoginModal();
+        return;
+    }
+    
     const product = products.find(p => p.id === productId);
     
     if (product) {
