@@ -31,12 +31,12 @@ db.get('SELECT COUNT(*) as count FROM products', [], (err, row) => {
     console.log(`📂 Seeding ${seedCategories.length} categories...`);
     
     const categoryStmt = db.prepare(`
-        INSERT OR IGNORE INTO categories (name, description, image_url, parent_id)
-        VALUES (?, ?, ?, ?)
+        INSERT OR IGNORE INTO categories (name, description, parent_id)
+        VALUES (?, ?, ?)
     `);
 
     seedCategories.forEach(cat => {
-        categoryStmt.run(cat.name, cat.description, cat.image_url, cat.parent_id, (err) => {
+        categoryStmt.run(cat.name, cat.description, cat.parent_id, (err) => {
             if (err) {
                 console.error(`❌ Error seeding category ${cat.name}:`, err);
             } else {
@@ -50,7 +50,7 @@ db.get('SELECT COUNT(*) as count FROM products', [], (err, row) => {
         console.log(`📦 Seeding ${seedProducts.length} products...`);
         
         const productStmt = db.prepare(`
-            INSERT OR IGNORE INTO products (name, description, price, category_id, stock, image_url)
+            INSERT OR IGNORE INTO products (name, description, price, category_id, stock, image)
             VALUES (?, ?, ?, ?, ?, ?)
         `);
 
