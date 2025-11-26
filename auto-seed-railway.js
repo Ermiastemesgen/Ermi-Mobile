@@ -8,33 +8,62 @@ const path = require('path');
 const dbPath = process.env.DATABASE_PATH || './emobile.db';
 
 console.log('🌱 Auto-seeding Railway database...');
+console.log('📍 Database path:', dbPath);
 
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('❌ Error opening database:', err.message);
-        return;
-    }
-    
-    // Check if products already exist
-    db.get('SELECT COUNT(*) as count FROM products', [], (err, row) => {
+// Ensure directory exists
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+    console.log(`📁 Creating directory: ${dbDir}`);
+    fs.mkdirSync(dbDir, { recursive: true });
+}
+
+// Wait a bit for tables to be created
+setTimeout(() => {
+    const db = new sqlite3.Database(dbPath, (err) => {
         if (err) {
-            console.error('❌ Error checking products:', err.message);
-            db.close();
+            console.error('❌ Error opening database:', err.message);
             return;
         }
         
-        if (row.count > 0) {
-            console.log(`ℹ️  Database already has ${row.count} products - skipping seed`);
-            db.close();
-            return;
-        }
+        console.log('✅ Database connection established');
         
-        console.log('📦 Database is empty - seeding products and categories...');
-        seedDatabase();
+        // Check if products table exists
+        db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='products'", [], (err, row) => {
+            if (err) {
+                console.error('❌ Error checking tables:', err.message);
+                db.close();
+                return;
+            }
+            
+            if (!row) {
+                console.log('⚠️  Products table does not exist yet - skipping auto-seed');
+                console.log('ℹ️  Tables will be created by server initialization');
+                db.close();
+                return;
+            }
+            
+            // Check if products already exist
+            db.get('SELECT COUNT(*) as count FROM products', [], (err, row) => {
+                if (err) {
+                    console.error('❌ Error checking products:', err.message);
+                    db.close();
+                    return;
+                }
+                
+                if (row.count > 0) {
+                    console.log(`ℹ️  Database already has ${row.count} products - skipping seed`);
+                    db.close();
+                    return;
+                }
+                
+                console.log('📦 Database is empty - seeding products and categories...');
+                seedDatabase(db);
+            });
+        });
     });
-});
+}, 3000); // Wait 3 seconds for tables to be created
 
-function seedDatabase() {
+function seedDatabase(db) {
     // Seed categories first
     const categories = JSON.parse(fs.readFileSync('seed-categories.json', 'utf8'));
     
