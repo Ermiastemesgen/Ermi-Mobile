@@ -488,12 +488,25 @@ async function ensureMainAdmin() {
             const hashedPassword = await bcrypt.hash(mainAdmin.password, 10);
 
             if (!user) {
-                // Create account if doesn't exist
+                // Create account if doesn't exist - try with email_verified first, fallback without it
                 db.run(
                     'INSERT INTO users (name, email, password, role, email_verified) VALUES (?, ?, ?, ?, 1)',
                     [mainAdmin.name, mainAdmin.email, hashedPassword, mainAdmin.role],
                     (err) => {
-                        if (err) {
+                        if (err && err.message.includes('no column named email_verified')) {
+                            // Column doesn't exist yet, insert without it
+                            db.run(
+                                'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
+                                [mainAdmin.name, mainAdmin.email, hashedPassword, mainAdmin.role],
+                                (err2) => {
+                                    if (err2) {
+                                        console.error('Error creating main admin:', err2.message);
+                                    } else {
+                                        console.log(`✅ Main admin account created: ${mainAdmin.email}`);
+                                    }
+                                }
+                            );
+                        } else if (err) {
                             console.error('Error creating main admin:', err.message);
                         } else {
                             console.log(`✅ Main admin account created: ${mainAdmin.email}`);
@@ -623,7 +636,20 @@ async function createDefaultAccounts() {
                         'INSERT INTO users (name, email, password, role, email_verified) VALUES (?, ?, ?, ?, ?)',
                         [account.name, account.email, hashedPassword, account.role, account.email_verified || 0],
                         (err) => {
-                            if (err) {
+                            if (err && err.message.includes('no column named email_verified')) {
+                                // Fallback without email_verified column
+                                db.run(
+                                    'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
+                                    [account.name, account.email, hashedPassword, account.role],
+                                    (err2) => {
+                                        if (err2) {
+                                            console.error(`Error creating ${account.role}:`, err2.message);
+                                        } else {
+                                            console.log(`✅ ${account.role.toUpperCase()} account created: ${account.email}`);
+                                        }
+                                    }
+                                );
+                            } else if (err) {
                                 console.error(`Error creating ${account.role}:`, err.message);
                             } else {
                                 console.log(`✅ ${account.role.toUpperCase()} account created: ${account.email}`);
@@ -902,7 +928,29 @@ app.post('/api/register', async (req, res) => {
             'INSERT INTO users (name, email, password, role, email_verified) VALUES (?, ?, ?, ?, 1)',
             [name, email, hashedPassword, userRole],
             async function(err) {
-                if (err) {
+                if (err && err.message.includes('no column named email_verified')) {
+                    // Fallback without email_verified column
+                    db.run(
+                        'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
+                        [name, email, hashedPassword, userRole],
+                        function(err2) {
+                            if (err2) {
+                                if (err2.message.includes('UNIQUE constraint failed')) {
+                                    res.status(400).json({ error: 'Email already exists' });
+                                } else {
+                                    res.status(500).json({ error: err2.message });
+                                }
+                            } else {
+                                console.log(`✅ New user registered: ${email}`);
+                                res.json({
+                                    success: true,
+                                    message: 'Registration successful! You can now login.',
+                                    userId: this.lastID
+                                });
+                            }
+                        }
+                    );
+                } else if (err) {
                     if (err.message.includes('UNIQUE constraint failed')) {
                         res.status(400).json({ error: 'Email already exists' });
                     } else {
