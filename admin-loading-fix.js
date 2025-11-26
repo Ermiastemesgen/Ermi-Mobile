@@ -1,9 +1,12 @@
 // Fix for Railway admin panel loading issues
 console.log('🔧 Admin Panel Loading Fix Script');
 
-// Override the API URL to ensure it's correct
-const API_URL = window.location.origin + '/api';
-console.log('📍 API URL:', API_URL);
+// Use API_URL from admin.js (don't redeclare)
+// API_URL will be available from admin.js which loads after this
+function getAPIURL() {
+    return window.API_URL || window.location.origin + '/api';
+}
+console.log('📍 API URL will be:', window.location.origin + '/api');
 
 // Add loading timeout and error handling
 const originalFetch = window.fetch;
@@ -129,7 +132,7 @@ async function testAPIConnectivity() {
         
         for (const endpoint of endpoints) {
             try {
-                const response = await fetch(API_URL + endpoint);
+                const response = await fetch(getAPIURL() + endpoint);
                 console.log(`✅ ${endpoint}: ${response.status}`);
             } catch (error) {
                 console.error(`❌ ${endpoint}: ${error.message}`);
