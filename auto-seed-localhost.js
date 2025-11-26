@@ -48,8 +48,8 @@ db.serialize(() => {
             console.log(`📦 Seeding ${seedProducts.length} products...`);
             
             const productStmt = db.prepare(`
-                INSERT INTO products (name, description, price, category_id, stock, icon)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO products (name, description, price, category_id, stock, icon, image)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             `);
 
             seedProducts.forEach(product => {
@@ -59,9 +59,10 @@ db.serialize(() => {
                     product.price,
                     product.category_id,
                     product.stock,
-                    product.icon
+                    product.icon,
+                    product.image || null
                 );
-                console.log(`✅ Seeded product: ${product.name}`);
+                console.log(`✅ Seeded product: ${product.name}${product.image ? ' 📸' : ''}`);
             });
 
             productStmt.finalize(() => {

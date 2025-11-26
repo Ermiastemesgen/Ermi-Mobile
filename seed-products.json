@@ -1,0 +1,83 @@
+[
+  {
+    "name": "Wireless Earbuds",
+    "price": 1800,
+    "icon": "fa-headphones",
+    "description": "High-quality wireless earbuds with noise cancellation",
+    "stock": 100,
+    "category_id": 1,
+    "image": "uploads/product-1763578479932-821214343.jpg"
+  },
+  {
+    "name": "IPhone Case",
+    "price": 1000,
+    "icon": "fa-mobile-screen",
+    "description": "Durable protective case for all phone models IPHONE 12 PROMAX",
+    "stock": 100,
+    "category_id": 2,
+    "image": "uploads/product-1763578578741-888442795.jpg"
+  },
+  {
+    "name": "Super Fast Charger",
+    "price": 1400,
+    "icon": "fa-plug",
+    "description": "30W fast charging adapter",
+    "stock": 100,
+    "category_id": 3,
+    "image": "uploads/product-1763578840347-63504711.jpg"
+  },
+  {
+    "name": "Mofi Mouse",
+    "price": 1200,
+    "icon": "fa-shield-halved",
+    "description": "Tempered glass screen protector",
+    "stock": 100,
+    "category_id": null,
+    "image": "uploads/product-1763578857537-61564206.jpg"
+  },
+  {
+    "name": "Smart Watch",
+    "price": 1500,
+    "icon": "fa-clock",
+    "description": "Feature-rich smartwatch with health tracking",
+    "stock": 100,
+    "category_id": 4,
+    "image": "uploads/product-1763578875383-886263369.jpg"
+  },
+  {
+    "name": "K9 MICROPHON",
+    "price": 1500,
+    "icon": "MIC",
+    "description": "Professional microphone for recording",
+    "stock": 100,
+    "category_id": 1,
+    "image": "uploads/product-1763578888594-247623065.jpg"
+  },
+  {
+    "name": "Bluetooth Speaker",
+    "price": 3500,
+    "icon": "fa-volume-up",
+    "description": "Portable Bluetooth speaker with deep bass and 12-hour playtime",
+    "stock": 30,
+    "category_id": null,
+    "image": "uploads/product-1763578906176-116673201.jpg"
+  },
+  {
+    "name": "Selfie Stick with Tripod",
+    "price": 900,
+    "icon": "fa-camera",
+    "description": "Extendable selfie stick with built-in tripod and Bluetooth remote",
+    "stock": 60,
+    "category_id": null,
+    "image": "uploads/product-1763664380615-239632977.jpg"
+  },
+  {
+    "name": "Wireless Charging Pad",
+    "price": 1200,
+    "icon": "fa-wifi",
+    "description": "Fast wireless charging pad compatible with all Qi-enabled devices",
+    "stock": 45,
+    "category_id": null,
+    "image": "uploads/product-1763664563556-718436160.jpg"
+  }
+]
