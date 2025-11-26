@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Railway Admin Panel Checker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .check-item {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .check-item h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .status.checking {
+            background: #ffc107;
+            color: #000;
+        }
+        .status.success {
+            background: #28a745;
+            color: white;
+        }
+        .status.error {
+            background: #dc3545;
+            color: white;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+        .admin-links {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e3f2fd;
+            border-radius: 10px;
+        }
+        .admin-links h3 {
+            color: #1976d2;
+            margin-bottom: 15px;
+        }
+        .admin-links a {
+            display: block;
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            color: #1976d2;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        .admin-links a:hover {
+            background: #1976d2;
+            color: white;
+            transform: translateX(5px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Railway Admin Panel Checker</h1>
+        
+        <div class="check-item">
+            <h3>1. Server Health Check</h3>
+            <div class="status checking" id="health-status">Checking...</div>
+            <div class="result" id="health-result"></div>
+        </div>
+
+        <div class="check-item">
+            <h3>2. API Products Endpoint</h3>
+            <div class="status checking" id="products-status">Checking...</div>
+            <div class="result" id="products-result"></div>
+        </div>
+
+        <div class="check-item">
+            <h3>3. Admin Panel Files</h3>
+            <div class="status checking" id="admin-status">Checking...</div>
+            <div class="result" id="admin-result"></div>
+        </div>
+
+        <div class="check-item">
+            <h3>4. Login Endpoint</h3>
+            <div class="status checking" id="login-status">Checking...</div>
+            <div class="result" id="login-result"></div>
+        </div>
+
+        <button onclick="runAllChecks()">🔄 Run Checks Again</button>
+
+        <div class="admin-links">
+            <h3>📋 Try These Admin Panel Links:</h3>
+            <a href="https://ermimobile.up.railway.app/admin.html" target="_blank">
+                🔗 Main Admin Panel
+            </a>
+            <a href="https://ermimobile.up.railway.app/admin-simple.html" target="_blank">
+                🔗 Simple Admin Panel
+            </a>
+            <a href="https://ermimobile.up.railway.app/working-admin.html" target="_blank">
+                🔗 Working Admin Panel
+            </a>
+            <a href="https://ermimobile.up.railway.app" target="_blank">
+                🔗 Main Website
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const RAILWAY_URL = 'https://ermimobile.up.railway.app';
+
+        async function checkHealth() {
+            const statusEl = document.getElementById('health-status');
+            const resultEl = document.getElementById('health-result');
+            
+            try {
+                const response = await fetch(`${RAILWAY_URL}/health`);
+                const data = await response.json();
+                
+                statusEl.className = 'status success';
+                statusEl.textContent = '✅ Server is Running';
+                resultEl.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ Server Not Responding';
+                resultEl.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function checkProducts() {
+            const statusEl = document.getElementById('products-status');
+            const resultEl = document.getElementById('products-result');
+            
+            try {
+                const response = await fetch(`${RAILWAY_URL}/api/products`);
+                const data = await response.json();
+                
+                statusEl.className = 'status success';
+                statusEl.textContent = `✅ Found ${data.products?.length || 0} Products`;
+                resultEl.textContent = `Products: ${data.products?.map(p => p.name).join(', ') || 'None'}`;
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ API Not Working';
+                resultEl.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function checkAdmin() {
+            const statusEl = document.getElementById('admin-status');
+            const resultEl = document.getElementById('admin-result');
+            
+            try {
+                const response = await fetch(`${RAILWAY_URL}/admin.html`);
+                const text = await response.text();
+                
+                if (text.includes('Admin Panel') || text.includes('admin')) {
+                    statusEl.className = 'status success';
+                    statusEl.textContent = '✅ Admin Panel Accessible';
+                    resultEl.textContent = 'Admin panel HTML file is loading correctly';
+                } else {
+                    statusEl.className = 'status error';
+                    statusEl.textContent = '⚠️ Unexpected Response';
+                    resultEl.textContent = 'Admin panel returned unexpected content';
+                }
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ Cannot Access Admin';
+                resultEl.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function checkLogin() {
+            const statusEl = document.getElementById('login-status');
+            const resultEl = document.getElementById('login-result');
+            
+            try {
+                const response = await fetch(`${RAILWAY_URL}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'ermias616@gmail.com',
+                        password: 'Ermi@0211'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusEl.className = 'status success';
+                    statusEl.textContent = '✅ Login Working';
+                    resultEl.textContent = `Logged in as: ${data.user?.name || 'Admin'}`;
+                } else {
+                    statusEl.className = 'status error';
+                    statusEl.textContent = '❌ Login Failed';
+                    resultEl.textContent = `Error: ${data.error || 'Unknown error'}`;
+                }
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ Login Endpoint Error';
+                resultEl.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function runAllChecks() {
+            // Reset all to checking
+            document.querySelectorAll('.status').forEach(el => {
+                el.className = 'status checking';
+                el.textContent = 'Checking...';
+            });
+            document.querySelectorAll('.result').forEach(el => {
+                el.textContent = '';
+            });
+
+            // Run checks
+            await checkHealth();
+            await checkProducts();
+            await checkAdmin();
+            await checkLogin();
+        }
+
+        // Run checks on page load
+        window.addEventListener('DOMContentLoaded', runAllChecks);
+    </script>
+</body>
+</html>
