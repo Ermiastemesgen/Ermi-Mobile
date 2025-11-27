@@ -938,6 +938,8 @@ function logout() {
 
 // ===== Update Login Button =====
 function updateLoginButton() {
+    const logoutButton = document.getElementById('logoutButton');
+    
     if (isLoggedIn) {
         const roleIcon = getRoleIcon(currentUser.role);
         const roleColor = getRoleColor(currentUser.role);
@@ -946,12 +948,22 @@ function updateLoginButton() {
         loginButton.style.background = roleColor;
         loginButton.onclick = () => window.location.href = '/profile.html';
         loginButton.title = 'View Profile';
+        
+        // Show logout button
+        if (logoutButton) {
+            logoutButton.style.display = 'flex';
+        }
     } else {
         loginButton.innerHTML = `<i class="fas fa-user"></i> Login`;
         loginButton.classList.remove('logged-in');
         loginButton.style.background = '';
         loginButton.onclick = openLoginModal;
         loginButton.title = 'Login';
+        
+        // Hide logout button
+        if (logoutButton) {
+            logoutButton.style.display = 'none';
+        }
     }
 }
 
@@ -984,6 +996,17 @@ function getRoleColor(role) {
 closeModal.addEventListener('click', closeLoginModal);
 loginOverlay.addEventListener('click', closeLoginModal);
 loginForm.addEventListener('submit', handleLogin);
+
+// Logout button event listener
+const logoutButton = document.getElementById('logoutButton');
+if (logoutButton) {
+    logoutButton.addEventListener('click', () => {
+        if (confirm('Are you sure you want to logout?')) {
+            logout();
+            showNotification('Logged out successfully', 'success');
+        }
+    });
+}
 
 // ===== Signup Modal Functions =====
 function openSignupModal() {

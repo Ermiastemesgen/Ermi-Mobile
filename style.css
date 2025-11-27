@@ -249,6 +249,28 @@ body.dark-mode .theme-toggle i::before {
     background: #059669;
 }
 
+/* Logout Button */
+.logout-button {
+    padding: 0.6rem 1.5rem;
+    background: #ef4444;
+    color: var(--white);
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.logout-button:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
 /* Cart Icon */
 .cart-icon {
     position: relative;
@@ -1284,6 +1306,11 @@ body.dark-mode .theme-toggle i::before {
     }
 
     .login-button {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .logout-button {
         padding: 0.5rem 1rem;
         font-size: 0.9rem;
     }
