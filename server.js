@@ -437,17 +437,21 @@ function initializeDatabase() {
         }, 2000);
     }
     
-    // Auto-seed database if empty (Railway deployment)
+    // Auto-seed database if empty (Production: Railway or Render)
     if (process.env.NODE_ENV === 'production') {
         setTimeout(() => {
             try {
-                require('./auto-seed-railway.js');
+                // Try Render auto-seed first, fallback to Railway
+                if (process.env.RENDER) {
+                    require('./auto-seed-render.js');
+                } else {
+                    require('./auto-seed-railway.js');
+                }
             } catch (error) {
-                console.log('ℹ️  Railway auto-seed skipped:', error.message);
+                console.log('ℹ️  Production auto-seed skipped:', error.message);
             }
         }, 2000);
     }
-    }, 2000);
 }
 
 // ===== Sync Product Images =====
