@@ -423,3 +423,99 @@ body {
     font-size: 11px;
     font-weight: 600;
 }
+
+/* Settings Section */
+.settings-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    padding: 1rem;
+}
+
+.settings-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.settings-card h3 {
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.settings-card h3 i {
+    color: #3b82f6;
+}
+
+.settings-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.settings-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #374151;
+    font-weight: 600;
+}
+
+.settings-form input[type="url"],
+.settings-form input[type="text"] {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.settings-form input:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.settings-form small {
+    display: block;
+    margin-top: 0.5rem;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.instructions-list {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+    color: #374151;
+}
+
+.instructions-list li {
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+}
+
+.instructions-list a {
+    color: #3b82f6;
+    text-decoration: none;
+}
+
+.instructions-list a:hover {
+    text-decoration: underline;
+}
+
+.settings-card p {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f3f4f6;
+    border-radius: 8px;
+    color: #374151;
+    font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+    .settings-container {
+        grid-template-columns: 1fr;
+    }
+}

@@ -431,3 +431,61 @@ document.addEventListener('DOMContentLoaded', () => {
     loadProducts();
     loadOrders();
 });
+
+// ===== Settings Management =====
+
+// Load settings
+async function loadSettings() {
+    try {
+        const response = await fetch(`${API_URL}/settings`);
+        const data = await response.json();
+        const settings = data.settings;
+
+        // Populate location map URL
+        if (settings.location_map_url) {
+            document.getElementById('locationMapUrl').value = settings.location_map_url;
+        }
+    } catch (error) {
+        console.error('Error loading settings:', error);
+    }
+}
+
+// Handle location settings form submission
+document.addEventListener('DOMContentLoaded', () => {
+    const locationForm = document.getElementById('locationSettingsForm');
+    
+    if (locationForm) {
+        locationForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const locationMapUrl = document.getElementById('locationMapUrl').value;
+            
+            try {
+                const response = await fetch(`${API_URL}/admin/settings/location_map_url`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ value: locationMapUrl })
+                });
+
+                if (response.ok) {
+                    alert('✅ Location updated successfully!');
+                } else {
+                    alert('❌ Failed to update location');
+                }
+            } catch (error) {
+                console.error('Error updating location:', error);
+                alert('❌ Error updating location');
+            }
+        });
+    }
+
+    // Load settings when settings section is opened
+    const settingsNavItem = document.querySelector('[data-section="settings"]');
+    if (settingsNavItem) {
+        settingsNavItem.addEventListener('click', () => {
+            loadSettings();
+        });
+    }
+});

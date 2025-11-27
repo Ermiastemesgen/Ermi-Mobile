@@ -29,6 +29,9 @@
             <a href="#contacts" class="nav-item" data-section="contacts">
                 <i class="fas fa-envelope"></i> Contacts
             </a>
+            <a href="#settings" class="nav-item" data-section="settings">
+                <i class="fas fa-cog"></i> Settings
+            </a>
             <a href="index.html" class="nav-item">
                 <i class="fas fa-home"></i> Back to Store
             </a>
@@ -162,6 +165,38 @@
                         <tr><td colspan="7">Loading...</td></tr>
                     </tbody>
                 </table>
+            </div>
+        </section>
+
+        <section id="settings" class="content-section">
+            <h2>Site Settings</h2>
+            <div class="settings-container">
+                <div class="settings-card">
+                    <h3><i class="fas fa-map-marker-alt"></i> Location Settings</h3>
+                    <form id="locationSettingsForm" class="settings-form">
+                        <div class="form-group">
+                            <label for="locationMapUrl">Google Maps URL:</label>
+                            <input type="url" id="locationMapUrl" placeholder="https://maps.google.com/?q=Your+Location" required>
+                            <small>Enter your Google Maps link. This will be used for the location icon in the header.</small>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-primary">
+                                <i class="fas fa-save"></i> Save Location
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="settings-card">
+                    <h3><i class="fas fa-info-circle"></i> How to Get Google Maps URL</h3>
+                    <ol class="instructions-list">
+                        <li>Go to <a href="https://maps.google.com" target="_blank">Google Maps</a></li>
+                        <li>Search for your shop location</li>
+                        <li>Click the "Share" button</li>
+                        <li>Copy the link and paste it above</li>
+                    </ol>
+                    <p><strong>Example:</strong> https://maps.google.com/?q=Ermi+Mobile+Shop+Addis+Ababa</p>
+                </div>
             </div>
         </section>
     </div>
