@@ -939,26 +939,29 @@ function logout() {
 // ===== Update Login Button =====
 function updateLoginButton() {
     const logoutButton = document.getElementById('logoutButton');
+    const loginBtn = document.getElementById('loginButton');
+    
+    if (!loginBtn) return;
     
     if (isLoggedIn) {
         const roleIcon = getRoleIcon(currentUser.role);
         const roleColor = getRoleColor(currentUser.role);
-        loginButton.innerHTML = `${roleIcon} ${currentUser.name}`;
-        loginButton.classList.add('logged-in');
-        loginButton.style.background = roleColor;
-        loginButton.onclick = () => window.location.href = '/profile.html';
-        loginButton.title = 'View Profile';
+        loginBtn.innerHTML = `${roleIcon} ${currentUser.name}`;
+        loginBtn.classList.add('logged-in');
+        loginBtn.style.background = roleColor;
+        loginBtn.title = 'View Profile';
+        loginBtn.dataset.loggedIn = 'true';
         
         // Show logout button
         if (logoutButton) {
             logoutButton.style.display = 'flex';
         }
     } else {
-        loginButton.innerHTML = `<i class="fas fa-user"></i> Login`;
-        loginButton.classList.remove('logged-in');
-        loginButton.style.background = '';
-        loginButton.onclick = openLoginModal;
-        loginButton.title = 'Login';
+        loginBtn.innerHTML = `<i class="fas fa-user"></i> <span data-translate="login">Login</span>`;
+        loginBtn.classList.remove('logged-in');
+        loginBtn.style.background = '';
+        loginBtn.title = 'Login';
+        loginBtn.dataset.loggedIn = 'false';
         
         // Hide logout button
         if (logoutButton) {
@@ -992,7 +995,24 @@ function getRoleColor(role) {
 }
 
 // ===== Event Listeners for Login =====
-// loginButton click is handled in updateLoginButton()
+// Add direct event listener for login button
+const loginButton = document.getElementById('loginButton');
+if (loginButton) {
+    loginButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        console.log('Login button clicked');
+        
+        // Check if user is logged in
+        if (loginButton.dataset.loggedIn === 'true') {
+            // Go to profile page
+            window.location.href = '/profile.html';
+        } else {
+            // Open login modal
+            openLoginModal();
+        }
+    });
+}
+
 closeModal.addEventListener('click', closeLoginModal);
 loginOverlay.addEventListener('click', closeLoginModal);
 loginForm.addEventListener('submit', handleLogin);
