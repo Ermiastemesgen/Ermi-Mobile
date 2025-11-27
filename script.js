@@ -1013,9 +1013,15 @@ if (loginButton) {
     });
 }
 
-closeModal.addEventListener('click', closeLoginModal);
-loginOverlay.addEventListener('click', closeLoginModal);
-loginForm.addEventListener('submit', handleLogin);
+if (closeModal) {
+    closeModal.addEventListener('click', closeLoginModal);
+}
+if (loginOverlay) {
+    loginOverlay.addEventListener('click', closeLoginModal);
+}
+if (loginForm) {
+    loginForm.addEventListener('submit', handleLogin);
+}
 
 // Logout button event listener
 const logoutButton = document.getElementById('logoutButton');
