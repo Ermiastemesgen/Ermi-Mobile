@@ -151,6 +151,41 @@ header {
     animation: ring 2s ease-in-out infinite;
 }
 
+/* Location Icon */
+.location-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    height: 45px;
+    background: #ef4444;
+    color: var(--white);
+    border-radius: 50%;
+    font-size: 1.2rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.location-icon:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.location-icon i {
+    animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
 @keyframes ring {
     0%, 100% {
         transform: rotate(0deg);
@@ -1300,6 +1335,12 @@ body.dark-mode .theme-toggle i::before {
     }
 
     .phone-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .location-icon {
         width: 40px;
         height: 40px;
         font-size: 1rem;

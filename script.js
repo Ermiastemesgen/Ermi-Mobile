@@ -1149,6 +1149,15 @@ async function loadSiteSettings() {
             document.title = settings.site_name + ' - Quality Mobile Accessories';
         }
         
+        // Update location map link
+        const locationIcon = document.getElementById('locationIcon');
+        if (settings.location_map_url && locationIcon) {
+            locationIcon.href = settings.location_map_url;
+        } else if (locationIcon) {
+            // Default Google Maps location (Addis Ababa, Ethiopia)
+            locationIcon.href = 'https://maps.google.com/?q=Addis+Ababa,+Ethiopia';
+        }
+        
         // Update hero background image
         if (settings.hero_background_image) {
             const heroSection = document.querySelector('.hero');

@@ -583,7 +583,8 @@ function initializeEssentialSettings() {
         { key: 'bank_name', value: 'Commercial Bank of Ethiopia' },
         { key: 'bank_account_name', value: 'Ermias Temesgen' },
         { key: 'bank_account_number', value: '1000297017873' },
-        { key: 'bank_instructions', value: 'ከከፈሉ በኋላ ደረሰኝ መላኮን እንዳይረሱ' }
+        { key: 'bank_instructions', value: 'ከከፈሉ በኋላ ደረሰኝ መላኮን እንዳይረሱ' },
+        { key: 'location_map_url', value: 'https://maps.google.com/?q=Addis+Ababa,+Ethiopia' }
     ];
 
     // Check if settings already exist, if not insert them
