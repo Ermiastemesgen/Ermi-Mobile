@@ -612,30 +612,36 @@ function initializeEssentialSettings() {
                 console.log('🎉 Essential settings initialized successfully!');
             });
         } else {
-            // Just ensure about_text exists
-            db.get('SELECT * FROM settings WHERE key = ?', ['about_text'], (err, aboutRow) => {
-                if (err) {
-                    console.error('❌ Error checking about_text:', err.message);
-                    return;
-                }
+            // Ensure critical settings exist
+            const criticalSettings = ['about_text', 'location_map_url'];
+            
+            criticalSettings.forEach(settingKey => {
+                db.get('SELECT * FROM settings WHERE key = ?', [settingKey], (err, row) => {
+                    if (err) {
+                        console.error(`❌ Error checking ${settingKey}:`, err.message);
+                        return;
+                    }
 
-                if (!aboutRow) {
-                    console.log('📝 About text missing, adding it...');
-                    const aboutSetting = essentialSettings.find(s => s.key === 'about_text');
-                    db.run(
-                        'INSERT INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)',
-                        [aboutSetting.key, aboutSetting.value],
-                        (err) => {
-                            if (err) {
-                                console.error('❌ Error adding about_text:', err.message);
-                            } else {
-                                console.log('✅ About text added successfully!');
-                            }
+                    if (!row) {
+                        console.log(`📝 ${settingKey} missing, adding it...`);
+                        const setting = essentialSettings.find(s => s.key === settingKey);
+                        if (setting) {
+                            db.run(
+                                'INSERT INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)',
+                                [setting.key, setting.value],
+                                (err) => {
+                                    if (err) {
+                                        console.error(`❌ Error adding ${settingKey}:`, err.message);
+                                    } else {
+                                        console.log(`✅ ${settingKey} added successfully!`);
+                                    }
+                                }
+                            );
                         }
-                    );
-                } else {
-                    console.log('✅ About text already exists in database');
-                }
+                    } else {
+                        console.log(`✅ ${settingKey} already exists in database`);
+                    }
+                });
             });
         }
     });
