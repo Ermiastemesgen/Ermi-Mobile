@@ -1151,11 +1151,17 @@ async function loadSiteSettings() {
         
         // Update location map link
         const locationIcon = document.getElementById('locationIcon');
+        console.log('📍 Location Icon:', locationIcon);
+        console.log('📍 Location URL from settings:', settings.location_map_url);
         if (settings.location_map_url && locationIcon) {
             locationIcon.href = settings.location_map_url;
+            console.log('✅ Location icon updated with:', settings.location_map_url);
         } else if (locationIcon) {
             // Default Google Maps location (Addis Ababa, Ethiopia)
             locationIcon.href = 'https://maps.google.com/?q=Addis+Ababa,+Ethiopia';
+            console.log('⚠️ Using default location');
+        } else {
+            console.log('❌ Location icon not found');
         }
         
         // Update hero background image
