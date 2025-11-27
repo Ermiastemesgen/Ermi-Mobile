@@ -427,9 +427,11 @@ body {
 /* Settings Section */
 .settings-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
     gap: 2rem;
     padding: 1rem;
+    width: 100%;
+    min-height: 200px;
 }
 
 .settings-card {
@@ -437,6 +439,8 @@ body {
     border-radius: 12px;
     padding: 2rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    min-height: 200px;
+    display: block;
 }
 
 .settings-card h3 {
@@ -454,6 +458,7 @@ body {
 
 .settings-form .form-group {
     margin-bottom: 1.5rem;
+    display: block;
 }
 
 .settings-form label {
@@ -461,6 +466,7 @@ body {
     margin-bottom: 0.5rem;
     color: #374151;
     font-weight: 600;
+    font-size: 1rem;
 }
 
 .settings-form input[type="url"],
@@ -471,6 +477,8 @@ body {
     border-radius: 8px;
     font-size: 1rem;
     transition: border-color 0.3s;
+    display: block;
+    box-sizing: border-box;
 }
 
 .settings-form input:focus {
