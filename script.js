@@ -1124,6 +1124,23 @@ window.forceUpdateAboutText = async function() {
     }
 };
 
+// ===== Update Location Icon =====
+function updateLocationIcon(url) {
+    const locationIcon = document.getElementById('locationIcon');
+    console.log('📍 Location Icon:', locationIcon);
+    console.log('📍 Location URL from settings:', url);
+    
+    if (url && locationIcon) {
+        locationIcon.href = url;
+        console.log('✅ Location icon updated with:', url);
+    } else if (locationIcon) {
+        // Keep default from HTML
+        console.log('⚠️ Using default location from HTML');
+    } else {
+        console.log('❌ Location icon not found');
+    }
+}
+
 // ===== Load Site Settings =====
 async function loadSiteSettings() {
     try {
@@ -1150,19 +1167,7 @@ async function loadSiteSettings() {
         }
         
         // Update location map link
-        const locationIcon = document.getElementById('locationIcon');
-        console.log('📍 Location Icon:', locationIcon);
-        console.log('📍 Location URL from settings:', settings.location_map_url);
-        if (settings.location_map_url && locationIcon) {
-            locationIcon.href = settings.location_map_url;
-            console.log('✅ Location icon updated with:', settings.location_map_url);
-        } else if (locationIcon) {
-            // Default Google Maps location (Addis Ababa, Ethiopia)
-            locationIcon.href = 'https://maps.google.com/?q=Addis+Ababa,+Ethiopia';
-            console.log('⚠️ Using default location');
-        } else {
-            console.log('❌ Location icon not found');
-        }
+        updateLocationIcon(settings.location_map_url);
         
         // Update hero background image
         if (settings.hero_background_image) {
