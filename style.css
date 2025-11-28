@@ -392,8 +392,8 @@ body.dark-mode .theme-toggle i::before {
     background: #f5f5f5;
     color: var(--white);
     padding: 0;
-    height: 460px;
-    max-height: 460px;
+    height: 380px;
+    max-height: 380px;
     animation: fadeIn 1s ease-in;
     overflow: hidden;
     margin-bottom: 16px;
@@ -424,13 +424,10 @@ body.dark-mode .theme-toggle i::before {
     background-position: center;
     background-repeat: no-repeat;
     opacity: 0;
-    transition: opacity 0.8s ease-in-out;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-    image-rendering: high-quality;
+    transition: opacity 0.6s ease-in-out;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
-    transform: translateZ(0);
+    transform: translate3d(0, 0, 0);
     will-change: opacity;
 }
 
@@ -738,12 +735,10 @@ body.dark-mode .theme-toggle i::before {
     height: 100%;
     object-fit: cover;
     transition: transform 0.3s ease;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-    image-rendering: high-quality;
+    image-rendering: auto;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
-    transform: translateZ(0);
+    transform: translate3d(0, 0, 0);
 }
 
 .product-card:hover .product-image img {
@@ -1389,8 +1384,8 @@ body.dark-mode .theme-toggle i::before {
 
     /* Hero Section */
     .hero {
-        height: 360px;
-        max-height: 360px;
+        height: 300px;
+        max-height: 300px;
     }
 
     .hero-title {
@@ -1603,8 +1598,8 @@ body.dark-mode .theme-toggle i::before {
 
     /* Hero Section */
     .hero {
-        height: 280px;
-        max-height: 280px;
+        height: 240px;
+        max-height: 240px;
     }
 
     .hero-title {
@@ -2676,91 +2671,49 @@ select:focus {
 
 /* ===== High-Quality Image Rendering (AliExpress Style) ===== */
 
-/* Global Image Quality Enhancement */
+/* Global Image Quality - Simple and Clear */
 img {
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-    image-rendering: high-quality;
+    image-rendering: auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* Hero Banner High Quality */
+/* Hero Banner - No Blur */
 .hero,
 .hero-slider,
-.slider-container,
+.slider-container {
+    transform: translate3d(0, 0, 0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+/* Slides - Crisp and Clear */
 .slide {
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    perspective: 1000px;
+    image-rendering: auto;
 }
 
-/* Prevent blur on animations */
 .slide.active {
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
+    transform: translate3d(0, 0, 0);
 }
 
-/* Product Images Sharp Rendering */
-.product-card,
-.product-image,
+/* Product Images - Sharp */
 .product-image img {
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
+    image-rendering: auto;
+    transform: translate3d(0, 0, 0);
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
 }
 
-/* Category Images */
-.cat-image {
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-    image-rendering: high-quality;
-}
-
-/* Lightbox High Quality */
-.lightbox-content {
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: high-quality;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-}
-
-/* Prevent image pixelation on scale */
+/* Prevent pixelation on hover */
 .product-card:hover .product-image img {
-    transform: scale(1.05) translateZ(0);
-    -webkit-transform: scale(1.05) translateZ(0);
+    transform: scale(1.05) translate3d(0, 0, 0);
 }
 
 /* Smooth image loading */
 img {
     -webkit-user-select: none;
-    -moz-user-select: none;
     user-select: none;
     -webkit-user-drag: none;
-    -moz-user-drag: none;
-}
-
-/* Optimize for retina displays */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-    .slide,
-    .product-image img,
-    .cat-image {
-        image-rendering: -webkit-optimize-contrast;
-        image-rendering: high-quality;
-    }
-}
-
-/* Force GPU acceleration for smooth rendering */
-.hero-slider,
-.product-card,
-.slide {
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0);
-    -webkit-perspective: 1000;
-    perspective: 1000;
 }
 
 /* Crisp text rendering */
@@ -2774,16 +2727,9 @@ body,
     text-rendering: optimizeLegibility;
 }
 
-/* Prevent image blur during transitions */
-.slide,
-.product-image img {
-    will-change: transform, opacity;
-}
-
 /* High quality background images */
 .hero,
 .slide {
     background-attachment: scroll;
-    -webkit-background-size: cover;
     background-size: cover;
 }
