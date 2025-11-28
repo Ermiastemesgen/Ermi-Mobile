@@ -45,6 +45,8 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    padding: 0;
 }
 
 .container {
@@ -396,6 +398,7 @@ body.dark-mode .theme-toggle i::before {
     max-height: 380px;
     animation: fadeIn 1s ease-in;
     overflow: hidden;
+    margin-top: 0;
     margin-bottom: 16px;
 }
 
