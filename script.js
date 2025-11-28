@@ -996,7 +996,6 @@ function getRoleColor(role) {
 
 // ===== Event Listeners for Login =====
 // Add direct event listener for login button
-const loginButton = document.getElementById('loginButton');
 if (loginButton) {
     loginButton.addEventListener('click', (e) => {
         e.preventDefault();
