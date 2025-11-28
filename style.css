@@ -48,7 +48,7 @@ body {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 0 20px;
 }
@@ -382,11 +382,11 @@ body.dark-mode .theme-toggle i::before {
     background: #f5f5f5;
     color: var(--white);
     padding: 0;
-    height: 400px;
-    max-height: 400px;
+    height: 460px;
+    max-height: 460px;
     animation: fadeIn 1s ease-in;
     overflow: hidden;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
 .hero-slider {
@@ -676,8 +676,8 @@ body.dark-mode .theme-toggle i::before {
 
 .products-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
     max-width: 1400px;
     margin: 0 auto;
 }
@@ -1365,8 +1365,8 @@ body.dark-mode .theme-toggle i::before {
 
     /* Hero Section */
     .hero {
-        height: 300px;
-        max-height: 300px;
+        height: 360px;
+        max-height: 360px;
     }
 
     .hero-title {
@@ -1579,8 +1579,8 @@ body.dark-mode .theme-toggle i::before {
 
     /* Hero Section */
     .hero {
-        height: 250px;
-        max-height: 250px;
+        height: 280px;
+        max-height: 280px;
     }
 
     .hero-title {
@@ -1894,8 +1894,8 @@ body.dark-mode .theme-toggle i::before {
 /* Landscape orientation fixes */
 @media (max-height: 500px) and (orientation: landscape) {
     .hero {
-        height: 300px;
-        max-height: 300px;
+        height: 320px;
+        max-height: 320px;
     }
 
     .login-content {
@@ -2413,27 +2413,28 @@ select:focus {
 /* Hero Content Overlay */
 .hero-content {
     position: absolute;
-    left: 40px;
+    left: 50px;
     top: 50%;
     transform: translateY(-50%);
     z-index: 10;
-    max-width: 500px;
+    max-width: 550px;
     text-align: left;
 }
 
 .hero-title {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
     font-weight: 700;
-    margin-bottom: 1rem;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    line-height: 1.2;
+    margin-bottom: 1.2rem;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+    line-height: 1.15;
 }
 
 .hero-subtitle {
-    font-size: 1.1rem;
-    margin-bottom: 1.5rem;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    font-size: 1.15rem;
+    margin-bottom: 1.8rem;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
     opacity: 0.95;
+    line-height: 1.5;
 }
 
 .cta-button {
