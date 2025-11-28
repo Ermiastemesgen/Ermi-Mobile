@@ -379,13 +379,14 @@ body.dark-mode .theme-toggle i::before {
 /* ===== Hero Section ===== */
 .hero {
     position: relative;
-    background: #000;
+    background: #f5f5f5;
     color: var(--white);
     padding: 0;
-    height: 100vh;
-    min-height: 600px;
+    height: 400px;
+    max-height: 400px;
     animation: fadeIn 1s ease-in;
     overflow: hidden;
+    margin-bottom: 20px;
 }
 
 .hero-slider {
@@ -425,59 +426,63 @@ body.dark-mode .theme-toggle i::before {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.1);
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0) 100%);
 }
 
 .slider-btn {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.9);
     border: none;
-    color: white;
-    font-size: 24px;
-    padding: 15px 20px;
+    color: #333;
+    font-size: 20px;
+    padding: 12px 16px;
     cursor: pointer;
     z-index: 10;
     transition: all 0.3s ease;
-    border-radius: 5px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .slider-btn:hover {
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 1);
+    color: var(--primary-color);
 }
 
 .slider-btn.prev {
-    left: 20px;
+    left: 15px;
 }
 
 .slider-btn.next {
-    right: 20px;
+    right: 15px;
 }
 
 .slider-dots {
     position: absolute;
-    bottom: 30px;
+    bottom: 15px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 10px;
+    gap: 8px;
     z-index: 10;
 }
 
 .dot {
-    width: 12px;
-    height: 12px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.6);
     cursor: pointer;
     transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
 .dot.active {
-    background: white;
-    width: 30px;
-    border-radius: 6px;
+    background: var(--primary-color);
+    width: 24px;
+    border-radius: 4px;
+    border-color: var(--primary-color);
 }
 
 .hero-content {
@@ -1360,8 +1365,8 @@ body.dark-mode .theme-toggle i::before {
 
     /* Hero Section */
     .hero {
-        height: 60vh;
-        min-height: 500px;
+        height: 300px;
+        max-height: 300px;
     }
 
     .hero-title {
@@ -1574,8 +1579,8 @@ body.dark-mode .theme-toggle i::before {
 
     /* Hero Section */
     .hero {
-        height: 50vh;
-        min-height: 400px;
+        height: 250px;
+        max-height: 250px;
     }
 
     .hero-title {
@@ -1889,8 +1894,8 @@ body.dark-mode .theme-toggle i::before {
 /* Landscape orientation fixes */
 @media (max-height: 500px) and (orientation: landscape) {
     .hero {
-        height: 100vh;
-        min-height: 100vh;
+        height: 300px;
+        max-height: 300px;
     }
 
     .login-content {
@@ -2387,5 +2392,235 @@ select:focus {
     .section-title::after {
         width: 60px;
         height: 3px;
+    }
+}
+
+
+/* ===== AliExpress-Style Hero Banner ===== */
+
+/* Compact Hero Banner */
+.hero {
+    border-radius: 0;
+}
+
+.hero .container {
+    max-width: 1400px;
+    height: 100%;
+    position: relative;
+    z-index: 5;
+}
+
+/* Hero Content Overlay */
+.hero-content {
+    position: absolute;
+    left: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    max-width: 500px;
+    text-align: left;
+}
+
+.hero-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    line-height: 1.2;
+}
+
+.hero-subtitle {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    opacity: 0.95;
+}
+
+.cta-button {
+    display: inline-block;
+    padding: 12px 32px;
+    background: linear-gradient(90deg, #ff4747 0%, #ff6b00 100%);
+    color: var(--white);
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(255, 71, 71, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cta-button:hover {
+    background: linear-gradient(90deg, #ff6b00 0%, #ff4747 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 71, 71, 0.5);
+}
+
+/* Promotional Badge */
+.promo-badge {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #ff4747 0%, #ff6b00 100%);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 12px rgba(255, 71, 71, 0.4);
+    z-index: 10;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Slider Image Optimization */
+.slide {
+    background-size: cover;
+    background-position: center;
+}
+
+/* Mobile Hero Adjustments */
+@media (max-width: 768px) {
+    .hero-content {
+        left: 20px;
+        right: 20px;
+        max-width: calc(100% - 40px);
+    }
+    
+    .hero-title {
+        font-size: 1.8rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 0.95rem;
+    }
+    
+    .cta-button {
+        padding: 10px 24px;
+        font-size: 0.9rem;
+    }
+    
+    .slider-btn {
+        padding: 8px 12px;
+        font-size: 16px;
+    }
+    
+    .slider-btn.prev {
+        left: 10px;
+    }
+    
+    .slider-btn.next {
+        right: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-content {
+        left: 15px;
+        right: 15px;
+    }
+    
+    .hero-title {
+        font-size: 1.5rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+    
+    .cta-button {
+        padding: 8px 20px;
+        font-size: 0.85rem;
+    }
+    
+    .promo-badge {
+        top: 10px;
+        right: 10px;
+        padding: 6px 12px;
+        font-size: 0.75rem;
+    }
+}
+
+/* Category Quick Links (AliExpress Style) */
+.category-quick-links {
+    display: flex;
+    gap: 10px;
+    padding: 15px 20px;
+    background: white;
+    border-bottom: 1px solid #e8e8e8;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.category-quick-links::-webkit-scrollbar {
+    height: 4px;
+}
+
+.category-quick-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: #f5f5f5;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    color: #333;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: 1px solid #e8e8e8;
+}
+
+.category-quick-link:hover {
+    background: linear-gradient(90deg, #ff4747 0%, #ff6b00 100%);
+    color: white;
+    border-color: transparent;
+    transform: translateY(-2px);
+}
+
+.category-quick-link i {
+    font-size: 1rem;
+}
+
+/* Flash Sale Banner */
+.flash-sale-banner {
+    background: linear-gradient(90deg, #ff4747 0%, #ff6b00 100%);
+    color: white;
+    padding: 12px 20px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 1rem;
+    box-shadow: 0 2px 8px rgba(255, 71, 71, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.flash-sale-banner::before {
+    content: '⚡';
+    position: absolute;
+    left: 20px;
+    font-size: 1.5rem;
+    animation: flash 1.5s ease-in-out infinite;
+}
+
+.flash-sale-banner::after {
+    content: '⚡';
+    position: absolute;
+    right: 20px;
+    font-size: 1.5rem;
+    animation: flash 1.5s ease-in-out infinite;
+    animation-delay: 0.75s;
+}
+
+@keyframes flash {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.2);
     }
 }
