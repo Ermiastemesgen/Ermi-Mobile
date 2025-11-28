@@ -422,8 +422,16 @@ body.dark-mode .theme-toggle i::before {
     height: 100%;
     background-size: cover;
     background-position: center;
+    background-repeat: no-repeat;
     opacity: 0;
-    transition: opacity 1s ease-in-out;
+    transition: opacity 0.8s ease-in-out;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    image-rendering: high-quality;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    will-change: opacity;
 }
 
 .slide.active {
@@ -730,6 +738,12 @@ body.dark-mode .theme-toggle i::before {
     height: 100%;
     object-fit: cover;
     transition: transform 0.3s ease;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    image-rendering: high-quality;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0);
 }
 
 .product-card:hover .product-image img {
@@ -2486,10 +2500,33 @@ select:focus {
     animation: pulse 2s ease-in-out infinite;
 }
 
-/* Slider Image Optimization */
+/* Slider Image Optimization - High Quality */
 .slide {
     background-size: cover;
     background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* High Quality Image Rendering */
+.slide img,
+.hero-slider img,
+.slider-container img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    image-rendering: high-quality;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* Prevent image blur on transform */
+.hero-slider,
+.slider-container {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    perspective: 1000px;
+    -webkit-perspective: 1000px;
 }
 
 /* Mobile Hero Adjustments */
@@ -2634,4 +2671,119 @@ select:focus {
         opacity: 0.5;
         transform: scale(1.2);
     }
+}
+
+
+/* ===== High-Quality Image Rendering (AliExpress Style) ===== */
+
+/* Global Image Quality Enhancement */
+img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    image-rendering: high-quality;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Hero Banner High Quality */
+.hero,
+.hero-slider,
+.slider-container,
+.slide {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
+
+/* Prevent blur on animations */
+.slide.active {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+}
+
+/* Product Images Sharp Rendering */
+.product-card,
+.product-image,
+.product-image img {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+/* Category Images */
+.cat-image {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    image-rendering: high-quality;
+}
+
+/* Lightbox High Quality */
+.lightbox-content {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: high-quality;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+/* Prevent image pixelation on scale */
+.product-card:hover .product-image img {
+    transform: scale(1.05) translateZ(0);
+    -webkit-transform: scale(1.05) translateZ(0);
+}
+
+/* Smooth image loading */
+img {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    -moz-user-drag: none;
+}
+
+/* Optimize for retina displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .slide,
+    .product-image img,
+    .cat-image {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: high-quality;
+    }
+}
+
+/* Force GPU acceleration for smooth rendering */
+.hero-slider,
+.product-card,
+.slide {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    -webkit-perspective: 1000;
+    perspective: 1000;
+}
+
+/* Crisp text rendering */
+body,
+.hero-title,
+.hero-subtitle,
+.product-name,
+.section-title {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* Prevent image blur during transitions */
+.slide,
+.product-image img {
+    will-change: transform, opacity;
+}
+
+/* High quality background images */
+.hero,
+.slide {
+    background-attachment: scroll;
+    -webkit-background-size: cover;
+    background-size: cover;
 }
