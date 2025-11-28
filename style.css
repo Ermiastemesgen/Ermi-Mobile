@@ -1268,9 +1268,33 @@ body.dark-mode .theme-toggle i::before {
 }
 
 /* ===== Responsive Design ===== */
+
+/* Tablet and below */
+@media (max-width: 1024px) {
+    .container {
+        padding: 0 15px;
+    }
+
+    .products-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .category-filter {
+        gap: 0.75rem;
+    }
+
+    .filter-btn {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.95rem;
+    }
+}
+
+/* Mobile landscape and below */
 @media (max-width: 768px) {
     .hamburger {
         display: flex;
+        z-index: 1001;
     }
 
     .nav-menu {
@@ -1285,42 +1309,112 @@ body.dark-mode .theme-toggle i::before {
         box-shadow: var(--shadow);
         padding: 2rem 0;
         gap: 0;
+        max-height: calc(100vh - 70px);
+        overflow-y: auto;
     }
 
     .nav-menu li {
         padding: 1rem 0;
+        border-bottom: 1px solid var(--border-color);
     }
 
     .nav-menu.active {
         left: 0;
     }
 
+    /* Hero Section */
+    .hero {
+        height: 60vh;
+        min-height: 500px;
+    }
+
     .hero-title {
         font-size: 2rem;
+        padding: 0 1rem;
     }
 
     .hero-subtitle {
         font-size: 1rem;
+        padding: 0 1rem;
+    }
+
+    .cta-button {
+        padding: 0.875rem 2rem;
+        font-size: 1rem;
+    }
+
+    .slider-btn {
+        padding: 12px 16px;
+        font-size: 20px;
+    }
+
+    .slider-btn.prev {
+        left: 10px;
+    }
+
+    .slider-btn.next {
+        right: 10px;
+    }
+
+    .slider-dots {
+        bottom: 20px;
+    }
+
+    /* Sections */
+    .products,
+    .about,
+    .contact {
+        padding: 60px 15px;
     }
 
     .section-title {
         font-size: 2rem;
+        margin-bottom: 2rem;
     }
 
+    /* Products Grid */
     .products-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
     }
 
+    .product-image {
+        height: 220px;
+    }
+
+    /* Search */
     .search-container {
-        flex-direction: column;
-        padding: 0 1rem;
+        flex-direction: row;
+        padding: 0;
+        max-width: 100%;
+    }
+
+    .search-input {
+        font-size: 0.9rem;
     }
 
     .search-button {
-        width: 100%;
-        justify-content: center;
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
     }
 
+    /* Category Filter */
+    .category-filter {
+        gap: 0.5rem;
+        padding: 0 0.5rem;
+    }
+
+    .filter-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    .cat-image {
+        width: 20px;
+        height: 20px;
+    }
+
+    /* Cart Popup */
     .cart-popup {
         width: 100%;
         right: -100%;
@@ -1330,30 +1424,49 @@ body.dark-mode .theme-toggle i::before {
         right: 0;
     }
 
+    /* Header Actions */
     .header-actions {
-        gap: 0.8rem;
+        gap: 0.75rem;
     }
 
-    .phone-icon {
-        width: 40px;
-        height: 40px;
-        font-size: 1rem;
-    }
-
+    .phone-icon,
     .location-icon {
         width: 40px;
         height: 40px;
         font-size: 1rem;
     }
 
-    .login-button {
-        padding: 0.5rem 1rem;
-        font-size: 0.9rem;
+    .theme-toggle {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
     }
 
+    .language-toggle {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
+
+    .login-button,
     .logout-button {
         padding: 0.5rem 1rem;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+    }
+
+    .login-button span,
+    .logout-button span {
+        display: none;
+    }
+
+    .login-button i,
+    .logout-button i {
+        margin: 0;
+    }
+
+    /* Login Modal */
+    .login-modal {
+        width: 95%;
+        max-width: 400px;
     }
 
     .login-content {
@@ -1362,31 +1475,424 @@ body.dark-mode .theme-toggle i::before {
 
     .login-content h2 {
         font-size: 1.5rem;
+        margin-bottom: 1.5rem;
     }
 
+    .login-form .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    /* Payment Methods */
     .payment-methods {
         grid-template-columns: 1fr;
         gap: 0.75rem;
     }
 
     .payment-card {
-        padding: 0.75rem;
+        padding: 1rem;
+        flex-direction: row;
+        justify-content: center;
+        gap: 0.75rem;
+    }
+
+    /* About Text */
+    .about-text {
+        font-size: 1rem;
+        padding: 0 1rem;
+    }
+
+    /* Contact Form */
+    .contact-form {
+        padding: 0 1rem;
+    }
+
+    /* Footer */
+    .footer {
+        padding: 1.5rem 15px;
+    }
+
+    .social-icons {
+        gap: 1.25rem;
+    }
+
+    .social-icons a {
+        font-size: 1.3rem;
     }
 }
 
+/* Mobile portrait */
 @media (max-width: 480px) {
+    /* Container */
+    .container {
+        padding: 0 10px;
+    }
+
+    /* Logo */
+    .logo {
+        font-size: 1.25rem;
+    }
+
+    .logo i {
+        font-size: 1.5rem;
+    }
+
+    /* Hero Section */
     .hero {
-        height: 70vh;
+        height: 50vh;
         min-height: 400px;
     }
 
+    .hero-title {
+        font-size: 1.5rem;
+    }
+
+    .hero-subtitle {
+        font-size: 0.9rem;
+    }
+
+    .cta-button {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.95rem;
+    }
+
     .slider-btn {
-        padding: 10px 15px;
-        font-size: 18px;
+        padding: 8px 12px;
+        font-size: 16px;
+    }
+
+    .slider-btn.prev {
+        left: 5px;
+    }
+
+    .slider-btn.next {
+        right: 5px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+    }
+
+    .dot.active {
+        width: 24px;
+    }
+
+    /* Sections */
+    .products,
+    .about,
+    .contact {
+        padding: 40px 10px;
     }
 
     .section-title {
         font-size: 1.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Products Grid */
+    .products-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+
+    .product-card {
+        max-width: 100%;
+    }
+
+    .product-image {
+        height: 200px;
+        font-size: 3rem;
+    }
+
+    .product-info {
+        padding: 1.25rem;
+    }
+
+    .product-name {
+        font-size: 1.1rem;
+    }
+
+    .product-price {
+        font-size: 1.3rem;
+    }
+
+    /* Search */
+    .search-container {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .search-input,
+    .search-button {
+        width: 100%;
+    }
+
+    .search-button {
+        justify-content: center;
+        padding: 0.75rem;
+    }
+
+    /* Category Filter */
+    .category-filter {
+        gap: 0.5rem;
+    }
+
+    .filter-btn {
+        padding: 0.5rem 0.875rem;
+        font-size: 0.8rem;
+    }
+
+    .cat-arrow {
+        width: 12px;
+        font-size: 0.7em;
+    }
+
+    /* Header Actions */
+    .header-actions {
+        gap: 0.5rem;
+    }
+
+    .phone-icon,
+    .location-icon,
+    .theme-toggle {
+        width: 36px;
+        height: 36px;
+        font-size: 0.95rem;
+    }
+
+    .language-toggle {
+        padding: 0.4rem 0.7rem;
+        font-size: 0.8rem;
+    }
+
+    .login-button,
+    .logout-button {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+
+    .cart-icon {
+        font-size: 1.3rem;
+    }
+
+    .cart-count {
+        width: 18px;
+        height: 18px;
+        font-size: 0.7rem;
+    }
+
+    /* Cart Popup */
+    .cart-header {
+        padding: 1.25rem;
+    }
+
+    .cart-header h3 {
+        font-size: 1.25rem;
+    }
+
+    .cart-item {
+        padding: 0.875rem;
+    }
+
+    .cart-item-icon {
+        font-size: 1.75rem;
+    }
+
+    .cart-footer {
+        padding: 1.25rem;
+    }
+
+    .cart-total {
+        font-size: 1.1rem;
+    }
+
+    /* Login Modal */
+    .login-modal {
+        width: 95%;
+        max-width: 100%;
+        margin: 0 10px;
+    }
+
+    .login-content {
+        padding: 1.75rem 1.25rem;
+        max-height: 85vh;
+    }
+
+    .login-content h2 {
+        font-size: 1.35rem;
+    }
+
+    .close-modal {
+        top: 0.75rem;
+        right: 0.75rem;
+        font-size: 1.75rem;
+    }
+
+    .login-form input {
+        padding: 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    .login-submit {
+        padding: 0.875rem;
+        font-size: 1rem;
+    }
+
+    /* Payment Methods */
+    .payment-card {
+        padding: 0.875rem;
+    }
+
+    .payment-card i {
+        font-size: 1.75rem;
+    }
+
+    .payment-card span {
+        font-size: 0.85rem;
+    }
+
+    /* About Text */
+    .about-text {
+        font-size: 0.95rem;
+        line-height: 1.7;
+    }
+
+    /* Contact Form */
+    .form-group input,
+    .form-group textarea {
+        padding: 0.875rem;
+        font-size: 0.95rem;
+    }
+
+    .submit-button {
+        padding: 0.875rem;
+        font-size: 1rem;
+    }
+
+    /* Footer */
+    .footer {
+        padding: 1.25rem 10px;
+        font-size: 0.9rem;
+    }
+
+    .social-icons {
+        gap: 1rem;
+    }
+
+    .social-icons a {
+        font-size: 1.2rem;
+    }
+
+    /* Lightbox */
+    .lightbox-content {
+        max-width: 98%;
+        max-height: 75vh;
+    }
+
+    .lightbox-close {
+        top: 5px;
+        right: 10px;
+        font-size: 30px;
+    }
+
+    .lightbox-caption {
+        font-size: 14px;
+        bottom: 10px;
+        width: 95%;
+        padding: 8px 15px;
+    }
+}
+
+/* Extra small devices */
+@media (max-width: 360px) {
+    .logo {
+        font-size: 1.1rem;
+    }
+
+    .logo i {
+        font-size: 1.3rem;
+    }
+
+    .header-actions {
+        gap: 0.4rem;
+    }
+
+    .phone-icon,
+    .location-icon,
+    .theme-toggle {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+    }
+
+    .language-toggle {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.75rem;
+    }
+
+    .login-button,
+    .logout-button {
+        padding: 0.35rem 0.7rem;
+        font-size: 0.75rem;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+    }
+
+    .product-image {
+        height: 180px;
+    }
+
+    .filter-btn {
+        padding: 0.45rem 0.75rem;
+        font-size: 0.75rem;
+    }
+}
+
+/* Landscape orientation fixes */
+@media (max-height: 500px) and (orientation: landscape) {
+    .hero {
+        height: 100vh;
+        min-height: 100vh;
+    }
+
+    .login-content {
+        max-height: 95vh;
+        padding: 1.5rem 1.25rem;
+    }
+
+    .login-content h2 {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+    }
+
+    .login-form .form-group {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Touch device improvements */
+@media (hover: none) and (pointer: coarse) {
+    .nav-link,
+    .filter-btn,
+    .add-to-cart,
+    .login-button,
+    .logout-button,
+    .submit-button,
+    .checkout-button {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .phone-icon,
+    .location-icon,
+    .theme-toggle,
+    .cart-icon {
+        min-width: 44px;
+        min-height: 44px;
     }
 }
 
