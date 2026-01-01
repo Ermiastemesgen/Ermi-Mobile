@@ -2480,6 +2480,37 @@ app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// ===== Image Debug Endpoint =====
+app.get('/test-images', (req, res) => {
+    try {
+        const files = fs.readdirSync(uploadsDir);
+        res.json({
+            uploadsPath: uploadsDir,
+            filesCount: files.length,
+            files: files.slice(0, 10),
+            environment: {
+                NODE_ENV: process.env.NODE_ENV,
+                RENDER: process.env.RENDER,
+                USE_PERSISTENT_STORAGE: process.env.USE_PERSISTENT_STORAGE,
+                UPLOADS_PATH: process.env.UPLOADS_PATH
+            },
+            isRender: isRender,
+            useRenderPersistentStorage: useRenderPersistentStorage
+        });
+    } catch (error) {
+        res.status(500).json({
+            error: error.message,
+            uploadsPath: uploadsDir,
+            environment: {
+                NODE_ENV: process.env.NODE_ENV,
+                RENDER: process.env.RENDER,
+                USE_PERSISTENT_STORAGE: process.env.USE_PERSISTENT_STORAGE,
+                UPLOADS_PATH: process.env.UPLOADS_PATH
+            }
+        });
+    }
+});
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
