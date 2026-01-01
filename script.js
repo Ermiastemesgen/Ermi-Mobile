@@ -27,9 +27,8 @@ function handleImageError(img) {
 
 // ===== API Configuration =====
 // Automatically detect if running locally or on production
-const API_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000/api' 
-    : `${window.location.origin}/api`;
+const API_URL = window.location.origin + '/api';
+console.log('🔗 API_URL set to:', API_URL);
 
 // ===== Theme Toggle =====
 const themeToggle = document.getElementById('themeToggle');
