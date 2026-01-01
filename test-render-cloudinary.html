@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Render Cloudinary Configuration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background: #d1fae5; color: #065f46; }
+        .error { background: #fee2e2; color: #991b1b; }
+        .warning { background: #fef3c7; color: #92400e; }
+        .info { background: #dbeafe; color: #1e40af; }
+        button {
+            background: #2563eb;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #1d4ed8; }
+        pre {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Render Cloudinary Configuration Test</h1>
+        <p>This page will help diagnose why your images are still changing on deployment.</p>
+        
+        <div class="test-section">
+            <h2>📋 Environment Check</h2>
+            <button onclick="checkEnvironment()">Check Environment Variables</button>
+            <div id="envResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>☁️ Cloudinary Connection Test</h2>
+            <button onclick="testCloudinary()">Test Cloudinary Connection</button>
+            <div id="cloudinaryResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Current Products Status</h2>
+            <button onclick="checkProducts()">Check Product Images</button>
+            <div id="productsResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 Quick Fix Options</h2>
+            <button onclick="showFixOptions()">Show Fix Options</button>
+            <div id="fixOptions"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin + '/api';
+
+        async function checkEnvironment() {
+            const result = document.getElementById('envResult');
+            result.innerHTML = '<div class="info">Checking environment variables...</div>';
+            
+            try {
+                const response = await fetch(`${API_URL}/test/env-info`);
+                const data = await response.json();
+                
+                let html = '<h3>Environment Status:</h3>';
+                html += `<div class="status ${data.cloudinaryStatus === 'Connected' ? 'success' : 'error'}">`;
+                html += `☁️ Cloudinary: ${data.cloudinaryStatus}</div>`;
+                html += `<div class="status info">🌍 Platform: ${data.platform || 'Unknown'}</div>`;
+                html += `<div class="status info">📦 Environment: ${data.environment}</div>`;
+                html += `<div class="status info">🚀 Port: ${data.port}</div>`;
+                
+                html += '<h4>Full Environment Info:</h4>';
+                html += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                
+                result.innerHTML = html;
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testCloudinary() {
+            const result = document.getElementById('cloudinaryResult');
+            result.innerHTML = '<div class="info">Testing Cloudinary configuration...</div>';
+            
+            try {
+                const response = await fetch(`${API_URL}/test/cloudinary-config`);
+                const data = await response.json();
+                
+                let html = '<h3>Cloudinary Configuration:</h3>';
+                html += `<div class="status ${data.status === 'success' ? 'success' : 'error'}">`;
+                html += `${data.message}</div>`;
+                
+                if (data.config) {
+                    html += '<h4>Configuration Details:</h4>';
+                    html += `<div class="status ${data.config.cloudinaryEnabled ? 'success' : 'error'}">`;
+                    html += `Cloudinary Enabled: ${data.config.cloudinaryEnabled ? 'Yes' : 'No'}</div>`;
+                    html += `<div class="status ${data.config.hasCloudName ? 'success' : 'error'}">`;
+                    html += `Cloud Name: ${data.config.hasCloudName ? 'Set' : 'Missing'}</div>`;
+                    html += `<div class="status ${data.config.hasApiKey ? 'success' : 'error'}">`;
+                    html += `API Key: ${data.config.hasApiKey ? 'Set' : 'Missing'}</div>`;
+                    html += `<div class="status ${data.config.hasApiSecret ? 'success' : 'error'}">`;
+                    html += `API Secret: ${data.config.hasApiSecret ? 'Set' : 'Missing'}</div>`;
+                }
+                
+                if (data.missingVars && data.missingVars.length > 0) {
+                    html += '<h4>Missing Variables:</h4>';
+                    html += `<div class="error">❌ ${data.missingVars.join(', ')}</div>`;
+                }
+                
+                result.innerHTML = html;
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function checkProducts() {
+            const result = document.getElementById('productsResult');
+            result.innerHTML = '<div class="info">Checking product images...</div>';
+            
+            try {
+                const response = await fetch(`${API_URL}/products`);
+                const data = await response.json();
+                
+                let html = '<h3>Product Images Status:</h3>';
+                html += `<div class="info">📦 Total Products: ${data.products?.length || 0}</div>`;
+                
+                if (data.products && data.products.length > 0) {
+                    let cloudinaryCount = 0;
+                    let localCount = 0;
+                    let brokenCount = 0;
+                    
+                    html += '<h4>Image Storage Analysis:</h4>';
+                    data.products.forEach((product, index) => {
+                        if (product.image) {
+                            if (product.image.startsWith('https://res.cloudinary.com')) {
+                                cloudinaryCount++;
+                                html += `<div class="success">✅ ${product.name}: Cloudinary</div>`;
+                            } else if (product.image.startsWith('/uploads/') || product.image.startsWith('uploads/')) {
+                                localCount++;
+                                html += `<div class="error">❌ ${product.name}: Local (will disappear on deploy)</div>`;
+                            } else {
+                                brokenCount++;
+                                html += `<div class="warning">⚠️ ${product.name}: Unknown (${product.image})</div>`;
+                            }
+                        }
+                    });
+                    
+                    html += '<h4>Summary:</h4>';
+                    html += `<div class="status ${cloudinaryCount > 0 ? 'success' : 'error'}">☁️ Cloudinary: ${cloudinaryCount}</div>`;
+                    html += `<div class="status ${localCount === 0 ? 'success' : 'error'}">📁 Local: ${localCount}</div>`;
+                    html += `<div class="status ${brokenCount === 0 ? 'success' : 'warning'}">❓ Unknown: ${brokenCount}</div>`;
+                    
+                    if (localCount > 0) {
+                        html += '<div class="error">🚨 You have local images that will disappear on deployment!</div>';
+                    }
+                } else {
+                    html += '<div class="warning">No products found</div>';
+                }
+                
+                result.innerHTML = html;
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function showFixOptions() {
+            const result = document.getElementById('fixOptions');
+            result.innerHTML = `
+                <h3>🔧 How to Fix Image Issues:</h3>
+                <div class="info">
+                    <h4>Option 1: Re-upload Images (Recommended)</h4>
+                    <p>1. Go to Admin Panel → Products</p>
+                    <p>2. Edit each product and re-upload the image</p>
+                    <p>3. New images will be stored in Cloudinary</p>
+                </div>
+                <div class="warning">
+                    <h4>Option 2: Check Environment Variables</h4>
+                    <p>1. Go to Render Dashboard</p>
+                    <p>2. Check Environment Variables section</p>
+                    <p>3. Ensure CLOUDINARY_* variables are set correctly</p>
+                    <p>4. Redeploy if needed</p>
+                </div>
+                <div class="error">
+                    <h4>Why Images Disappear:</h4>
+                    <p>• Images stored in /uploads folder (temporary)</p>
+                    <p>• Render deletes this folder on every deployment</p>
+                    <p>• Solution: Store images in Cloudinary (permanent)</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
