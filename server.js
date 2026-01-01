@@ -262,10 +262,40 @@ app.use((req, res, next) => {
 
 app.use(express.static(__dirname)); // Serve static files (HTML, CSS, JS)
 
-// Create uploads directory if it doesn't exist (for local fallback)
-const uploadsDir = path.join(__dirname, 'uploads');
+// ===== Storage Configuration =====
+// Support for Render Pro persistent disk storage
+const isRender = process.env.RENDER === 'true';
+const useRenderPersistentStorage = process.env.USE_PERSISTENT_STORAGE === 'true';
+
+// Determine uploads directory path
+let uploadsDir;
+if (isRender && useRenderPersistentStorage && process.env.UPLOADS_PATH) {
+    // Use custom persistent path from environment
+    uploadsDir = process.env.UPLOADS_PATH;
+    console.log('📁 Using Render Pro persistent storage:', uploadsDir);
+} else if (isRender && useRenderPersistentStorage) {
+    // Use default Render persistent path
+    uploadsDir = '/opt/render/project/src/uploads';
+    console.log('📁 Using Render Pro default persistent storage:', uploadsDir);
+} else {
+    // Use local uploads directory
+    uploadsDir = path.join(__dirname, 'uploads');
+    console.log('📁 Using local storage:', uploadsDir);
+}
+
+// Create uploads directory if it doesn't exist
 if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir);
+    try {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+        console.log('✅ Created uploads directory:', uploadsDir);
+    } catch (error) {
+        console.error('❌ Failed to create uploads directory:', error.message);
+        // Fallback to local directory
+        uploadsDir = path.join(__dirname, 'uploads');
+        if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+    }
 }
 app.use('/uploads', express.static(uploadsDir));
 
