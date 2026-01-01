@@ -1,3 +1,30 @@
+
+// Handle product image display
+function handleProductImage(product) {
+    let imageSrc = '/uploads/placeholder.jpg'; // Default placeholder
+    
+    if (handleProductImage(product)) {
+        if (handleProductImage(product).includes('cloudinary.com')) {
+            // Cloudinary image - use as is
+            imageSrc = handleProductImage(product);
+        } else if (handleProductImage(product).startsWith('uploads/')) {
+            // Local image - add leading slash
+            imageSrc = '/' + handleProductImage(product);
+        } else if (handleProductImage(product).startsWith('/uploads/')) {
+            // Already has leading slash
+            imageSrc = handleProductImage(product);
+        }
+    }
+    
+    return imageSrc;
+}
+
+// Handle image loading errors
+function handleImageError(img) {
+    img.src = '/uploads/placeholder.jpg';
+    img.onerror = null; // Prevent infinite loop
+}
+
 // ===== API Configuration =====
 // Automatically detect if running locally or on production
 const API_URL = window.location.hostname === 'localhost' 
@@ -494,9 +521,9 @@ function displayProducts() {
         const productCard = document.createElement('div');
         productCard.className = 'product-card';
         productCard.innerHTML = `
-            <div class="product-image" ${product.image ? 'onclick="openLightbox(\'' + product.image + '\', \'' + product.name + '\')" style="cursor: zoom-in;"' : 'onclick="filterByCategory(' + (product.category_id || 'null') + ')" style="cursor: pointer;"'} title="${product.image ? 'Click to view full size' : 'View ' + (product.category_name || 'all products')}">
-                ${product.image ? 
-                    '<img src="' + product.image + '" alt="' + product.name + '" style="width: 100%; height: 100%; object-fit: cover; image-rendering: high-quality;">' : 
+            <div class="product-image" ${handleProductImage(product) ? 'onclick="openLightbox(\'' + handleProductImage(product) + '\', \'' + product.name + '\')" style="cursor: zoom-in;"' : 'onclick="filterByCategory(' + (product.category_id || 'null') + ')" style="cursor: pointer;"'} title="${handleProductImage(product) ? 'Click to view full size' : 'View ' + (product.category_name || 'all products')}">
+                ${handleProductImage(product) ? 
+                    '<img src="' + handleProductImage(product) + '" alt="' + product.name + '" style="width: 100%; height: 100%; object-fit: cover; image-rendering: high-quality;">' : 
                     '<i class="fas ' + product.icon + '"></i>'
                 }
             </div>
@@ -1522,7 +1549,7 @@ function initHeroSlider() {
     
     // Create slides
     slider.innerHTML = productsWithImages.map((product, index) => `
-        <div class="slide ${index === 0 ? 'active' : ''}" style="background-image: url('${product.image}');">
+        <div class="slide ${index === 0 ? 'active' : ''}" style="background-image: url('${handleProductImage(product)}');">
             <div class="slide-overlay"></div>
         </div>
     `).join('');

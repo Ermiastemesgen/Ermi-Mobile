@@ -1,3 +1,30 @@
+
+// Handle admin product image display
+function handleAdminProductImage(product) {
+    let imageSrc = '/uploads/placeholder.jpg'; // Default placeholder
+    
+    if (handleAdminProductImage(product)) {
+        if (handleAdminProductImage(product).includes('cloudinary.com')) {
+            // Cloudinary image - use as is
+            imageSrc = handleAdminProductImage(product);
+        } else if (handleAdminProductImage(product).startsWith('uploads/')) {
+            // Local image - add leading slash
+            imageSrc = '/' + handleAdminProductImage(product);
+        } else if (handleAdminProductImage(product).startsWith('/uploads/')) {
+            // Already has leading slash
+            imageSrc = handleAdminProductImage(product);
+        }
+    }
+    
+    return imageSrc;
+}
+
+// Handle admin image loading errors
+function handleAdminImageError(img) {
+    img.src = '/uploads/placeholder.jpg';
+    img.onerror = null; // Prevent infinite loop
+}
+
 // Automatically detect if running locally or on production
 const API_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3000/api' 
