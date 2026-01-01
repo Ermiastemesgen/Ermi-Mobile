@@ -336,24 +336,93 @@ const loginLink = document.getElementById('loginLink');
 let allProducts = [];
 let currentCategory = 'all';
 
+
 async function fetchProducts() {
+    console.log('🔄 Fetching products from API...');
+    console.log('API URL:', API_URL);
+    
     try {
+        // Show loading message
+        const productsGrid = document.getElementById('productsGrid');
+        if (productsGrid) {
+            productsGrid.innerHTML = '<p style="text-align: center; grid-column: 1/-1; padding: 2rem;">Loading products...</p>';
+        }
+        
         const response = await fetch(`${API_URL}/products`);
+        console.log('📡 Products API response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
-        products = data.products;
-        allProducts = data.products;
+        console.log('📦 Products data received:', data);
+        
+        if (data.products && Array.isArray(data.products)) {
+            products = data.products;
+            allProducts = data.products;
+            console.log(`✅ Loaded ${products.length} products`);
+        } else {
+            console.error('❌ Invalid products data structure:', data);
+            throw new Error('Invalid products data received');
+        }
         
         // Load categories for filter
-        const categoriesResponse = await fetch(`${API_URL}/categories`);
-        const catData = await categoriesResponse.json();
-        categoriesData = catData.categories;
-        displayCategoryFilter(catData.categories);
+        try {
+            const categoriesResponse = await fetch(`${API_URL}/categories`);
+            console.log('📡 Categories API response status:', categoriesResponse.status);
+            
+            if (categoriesResponse.ok) {
+                const catData = await categoriesResponse.json();
+                if (catData.categories && Array.isArray(catData.categories)) {
+                    categoriesData = catData.categories;
+                    displayCategoryFilter(catData.categories);
+                    console.log(`✅ Loaded ${catData.categories.length} categories`);
+                } else {
+                    console.warn('⚠️  Invalid categories data, using default');
+                    categoriesData = [];
+                }
+            } else {
+                console.warn('⚠️  Categories API failed, continuing without categories');
+                categoriesData = [];
+            }
+        } catch (catError) {
+            console.warn('⚠️  Categories loading failed:', catError.message);
+            categoriesData = [];
+        }
         
         displayProducts();
         initHeroSlider(); // Initialize hero slider with product images
+        
     } catch (error) {
-        console.error('Error fetching products:', error);
-        showNotification('Error loading products. Please refresh the page.', 'error');
+        console.error('❌ Error fetching products:', error);
+        
+        // Show user-friendly error message
+        const productsGrid = document.getElementById('productsGrid');
+        if (productsGrid) {
+            productsGrid.innerHTML = `
+                <div style="text-align: center; grid-column: 1/-1; padding: 2rem;">
+                    <div style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 8px; padding: 1.5rem; margin: 1rem 0;">
+                        <h3 style="color: #dc2626; margin: 0 0 1rem 0;">
+                            <i class="fas fa-exclamation-triangle"></i> Unable to Load Products
+                        </h3>
+                        <p style="color: #7f1d1d; margin: 0 0 1rem 0;">
+                            We're having trouble loading our products. This might be due to:
+                        </p>
+                        <ul style="color: #7f1d1d; text-align: left; display: inline-block; margin: 0 0 1rem 0;">
+                            <li>Server connection issues</li>
+                            <li>Network connectivity problems</li>
+                            <li>Temporary maintenance</li>
+                        </ul>
+                        <button onclick="fetchProducts()" style="background: #dc2626; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">
+                            <i class="fas fa-refresh"></i> Try Again
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        showNotification('Error loading products. Please refresh the page or try again later.', 'error');
     }
 }
 
@@ -509,28 +578,54 @@ function searchProducts() {
 }
 
 // ===== Initialize Products =====
+
 function displayProducts() {
-    productsGrid.innerHTML = '';
+    console.log('🎨 Displaying products...', products.length);
+    const productsGrid = document.getElementById('productsGrid');
     
-    if (products.length === 0) {
-        productsGrid.innerHTML = '<p style="text-align: center; grid-column: 1/-1;">Loading products...</p>';
+    if (!productsGrid) {
+        console.error('❌ Products grid element not found');
         return;
     }
     
-    products.forEach(product => {
+    productsGrid.innerHTML = '';
+    
+    if (!products || products.length === 0) {
+        productsGrid.innerHTML = `
+            <div style="text-align: center; grid-column: 1/-1; padding: 3rem;">
+                <div style="background: #f9fafb; border: 2px dashed #d1d5db; border-radius: 12px; padding: 2rem;">
+                    <i class="fas fa-box-open" style="font-size: 3rem; color: #9ca3af; margin-bottom: 1rem;"></i>
+                    <h3 style="color: #6b7280; margin: 0 0 0.5rem 0;">No Products Available</h3>
+                    <p style="color: #9ca3af; margin: 0;">
+                        Products will appear here once they are added to the store.
+                    </p>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    products.forEach((product, index) => {
+        console.log(`🛍️  Rendering product ${index + 1}: ${product.name}`);
+        
         const productCard = document.createElement('div');
         productCard.className = 'product-card';
+        
+        // Get image source with fallback
+        const imageSrc = handleProductImage(product);
+        console.log(`🖼️  Product ${product.name} image: ${imageSrc}`);
+        
         productCard.innerHTML = `
-            <div class="product-image" ${handleProductImage(product) ? 'onclick="openLightbox(\'' + handleProductImage(product) + '\', \'' + product.name + '\')" style="cursor: zoom-in;"' : 'onclick="filterByCategory(' + (product.category_id || 'null') + ')" style="cursor: pointer;"'} title="${handleProductImage(product) ? 'Click to view full size' : 'View ' + (product.category_name || 'all products')}">
-                ${handleProductImage(product) ? 
-                    '<img src="' + handleProductImage(product) + '" alt="' + product.name + '" style="width: 100%; height: 100%; object-fit: cover; image-rendering: high-quality;">' : 
-                    '<i class="fas ' + product.icon + '"></i>'
+            <div class="product-image" ${imageSrc ? 'onclick="openLightbox(\'' + imageSrc + '\', \'' + product.name + '\')" style="cursor: zoom-in;"' : 'onclick="filterByCategory(' + (product.category_id || 'null') + ')" style="cursor: pointer;"'} title="${imageSrc ? 'Click to view full size' : 'View ' + (product.category_name || 'all products')}">
+                ${imageSrc ? 
+                    '<img src="' + imageSrc + '" alt="' + product.name + '" style="width: 100%; height: 100%; object-fit: cover; image-rendering: high-quality;" onerror="handleImageError(this)">' : 
+                    '<div class="image-placeholder"><i class="fas fa-image"></i><br>No Image</div>'
                 }
             </div>
             <div class="product-info">
                 <h3 class="product-name" onclick="filterByCategory(${product.category_id || 'null'})" style="cursor: pointer;" title="View all ${product.category_name || 'products'}">${product.name}</h3>
                 ${product.description ? '<p class="product-description">' + product.description + '</p>' : ''}
-                <p class="product-price">${product.price.toFixed(2)} <span data-translate="birr">Birr</span></p>
+                <p class="product-price">${product.price ? product.price.toFixed(2) : '0.00'} <span data-translate="birr">Birr</span></p>
                 <button class="add-to-cart" onclick="addToCart(${product.id})">
                     <i class="fas fa-cart-plus"></i> <span data-translate="addToCart">Add to Cart</span>
                 </button>
@@ -538,6 +633,8 @@ function displayProducts() {
         `;
         productsGrid.appendChild(productCard);
     });
+    
+    console.log(`✅ Successfully displayed ${products.length} products`);
     
     // Update translations for newly added elements
     if (typeof updatePageLanguage === 'function') {
@@ -1625,6 +1722,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // ===== Initialize on Page Load =====
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 DOM loaded, initializing...');
+    console.log('🌐 Current URL:', window.location.href);
+    console.log('🔗 API URL:', API_URL);
     loadSiteSettings();
     checkUserSession();
     fetchProducts();

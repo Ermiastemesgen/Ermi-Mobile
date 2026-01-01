@@ -2475,6 +2475,42 @@ app.get('/api/test/env-info', (req, res) => {
     });
 });
 
+
+// ===== Products Test Endpoint =====
+app.get('/test-products', (req, res) => {
+    console.log('🧪 Test products endpoint called');
+    
+    const query = `
+        SELECT p.*, c.name as category_name, c.parent_id
+        FROM products p
+        LEFT JOIN categories c ON p.category_id = c.id
+        ORDER BY p.id DESC
+    `;
+    
+    db.all(query, [], (err, products) => {
+        if (err) {
+            console.error('❌ Database error:', err.message);
+            res.status(500).json({ 
+                error: 'Database error', 
+                message: err.message,
+                timestamp: new Date().toISOString()
+            });
+            return;
+        }
+        
+        console.log(`📊 Found ${products.length} products in database`);
+        
+        res.json({
+            success: true,
+            count: products.length,
+            products: products,
+            timestamp: new Date().toISOString(),
+            database: dbPath,
+            environment: process.env.NODE_ENV || 'development'
+        });
+    });
+});
+
 // ===== Health Check Endpoint =====
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
