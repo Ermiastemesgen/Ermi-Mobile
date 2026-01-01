@@ -25,10 +25,21 @@ function handleImageError(img) {
     img.onerror = null; // Prevent infinite loop
 }
 
-// ===== API Configuration =====
-// Automatically detect if running locally or on production
-const API_URL = window.location.origin + '/api';
-console.log('🔗 API_URL set to:', API_URL);
+
+// ===== BULLETPROOF API Configuration =====
+let API_URL;
+try {
+    if (typeof window !== 'undefined' && window.location) {
+        API_URL = window.location.origin + '/api';
+        console.log('✅ API_URL set to:', API_URL);
+    } else {
+        API_URL = '/api';
+        console.log('⚠️  Fallback API_URL:', API_URL);
+    }
+} catch (error) {
+    API_URL = '/api';
+    console.log('❌ Error setting API_URL, using fallback:', API_URL);
+}
 
 // ===== Theme Toggle =====
 const themeToggle = document.getElementById('themeToggle');
@@ -336,92 +347,114 @@ let allProducts = [];
 let currentCategory = 'all';
 
 
+
+// ===== BULLETPROOF fetchProducts Function =====
 async function fetchProducts() {
-    console.log('🔄 Fetching products from API...');
-    console.log('API URL:', API_URL);
+    console.log('🚀 fetchProducts started');
+    console.log('🔗 API_URL:', API_URL);
+    
+    const productsGrid = document.getElementById('productsGrid');
+    if (!productsGrid) {
+        console.error('❌ productsGrid element not found');
+        return;
+    }
+    
+    // Show loading
+    productsGrid.innerHTML = '<div style="text-align: center; grid-column: 1/-1; padding: 3rem;"><h3>🔄 Loading Products...</h3><p>Please wait while we fetch the latest products.</p></div>';
     
     try {
-        // Show loading message
-        const productsGrid = document.getElementById('productsGrid');
-        if (productsGrid) {
-            productsGrid.innerHTML = '<p style="text-align: center; grid-column: 1/-1; padding: 2rem;">Loading products...</p>';
-        }
+        console.log('📡 Making API request to:', API_URL + '/products');
         
-        const response = await fetch(`${API_URL}/products`);
-        console.log('📡 Products API response status:', response.status);
+        const response = await fetch(API_URL + '/products', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            cache: 'no-cache'
+        });
+        
+        console.log('📡 Response status:', response.status);
+        console.log('📡 Response ok:', response.ok);
         
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`API request failed: ${response.status} ${response.statusText}`);
         }
         
         const data = await response.json();
-        console.log('📦 Products data received:', data);
+        console.log('📦 API response data:', data);
         
-        if (data.products && Array.isArray(data.products)) {
+        if (data && data.products && Array.isArray(data.products)) {
             products = data.products;
             allProducts = data.products;
-            console.log(`✅ Loaded ${products.length} products`);
-        } else {
-            console.error('❌ Invalid products data structure:', data);
-            throw new Error('Invalid products data received');
-        }
-        
-        // Load categories for filter
-        try {
-            const categoriesResponse = await fetch(`${API_URL}/categories`);
-            console.log('📡 Categories API response status:', categoriesResponse.status);
+            console.log(`✅ Successfully loaded ${products.length} products`);
             
-            if (categoriesResponse.ok) {
-                const catData = await categoriesResponse.json();
-                if (catData.categories && Array.isArray(catData.categories)) {
-                    categoriesData = catData.categories;
-                    displayCategoryFilter(catData.categories);
-                    console.log(`✅ Loaded ${catData.categories.length} categories`);
-                } else {
-                    console.warn('⚠️  Invalid categories data, using default');
-                    categoriesData = [];
+            // Log each product
+            products.forEach((product, index) => {
+                console.log(`📦 Product ${index + 1}: ${product.name} - ${product.price} Birr`);
+            });
+            
+            // Display products
+            displayProducts();
+            
+            // Try to load categories (optional)
+            try {
+                const catResponse = await fetch(API_URL + '/categories');
+                if (catResponse.ok) {
+                    const catData = await catResponse.json();
+                    if (catData && catData.categories) {
+                        categoriesData = catData.categories;
+                        displayCategoryFilter(catData.categories);
+                        console.log(`✅ Loaded ${catData.categories.length} categories`);
+                    }
                 }
-            } else {
-                console.warn('⚠️  Categories API failed, continuing without categories');
-                categoriesData = [];
+            } catch (catError) {
+                console.warn('⚠️  Categories failed to load:', catError.message);
             }
-        } catch (catError) {
-            console.warn('⚠️  Categories loading failed:', catError.message);
-            categoriesData = [];
+            
+            // Initialize hero slider
+            try {
+                if (typeof initHeroSlider === 'function') {
+                    initHeroSlider();
+                }
+            } catch (sliderError) {
+                console.warn('⚠️  Hero slider failed:', sliderError.message);
+            }
+            
+        } else {
+            throw new Error('Invalid data structure received from API');
         }
-        
-        displayProducts();
-        initHeroSlider(); // Initialize hero slider with product images
         
     } catch (error) {
-        console.error('❌ Error fetching products:', error);
+        console.error('❌ fetchProducts error:', error);
         
-        // Show user-friendly error message
-        const productsGrid = document.getElementById('productsGrid');
-        if (productsGrid) {
-            productsGrid.innerHTML = `
-                <div style="text-align: center; grid-column: 1/-1; padding: 2rem;">
-                    <div style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 8px; padding: 1.5rem; margin: 1rem 0;">
-                        <h3 style="color: #dc2626; margin: 0 0 1rem 0;">
-                            <i class="fas fa-exclamation-triangle"></i> Unable to Load Products
-                        </h3>
-                        <p style="color: #7f1d1d; margin: 0 0 1rem 0;">
-                            We're having trouble loading our products. This might be due to:
-                        </p>
-                        <ul style="color: #7f1d1d; text-align: left; display: inline-block; margin: 0 0 1rem 0;">
-                            <li>Server connection issues</li>
-                            <li>Network connectivity problems</li>
-                            <li>Temporary maintenance</li>
-                        </ul>
-                        <button onclick="fetchProducts()" style="background: #dc2626; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">
-                            <i class="fas fa-refresh"></i> Try Again
-                        </button>
-                    </div>
+        // Show user-friendly error with retry
+        productsGrid.innerHTML = `
+            <div style="text-align: center; grid-column: 1/-1; padding: 3rem;">
+                <div style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 12px; padding: 2rem; max-width: 500px; margin: 0 auto;">
+                    <h3 style="color: #dc2626; margin: 0 0 1rem 0;">
+                        <i class="fas fa-exclamation-triangle"></i> Products Not Available
+                    </h3>
+                    <p style="color: #7f1d1d; margin: 0 0 1rem 0;">
+                        We're having trouble loading our products right now.
+                    </p>
+                    <p style="color: #7f1d1d; margin: 0 0 1.5rem 0; font-size: 14px;">
+                        <strong>Error:</strong> ${error.message}
+                    </p>
+                    <button onclick="fetchProducts()" style="background: #dc2626; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; margin-right: 0.5rem; font-size: 14px;">
+                        <i class="fas fa-refresh"></i> Try Again
+                    </button>
+                    <button onclick="window.location.reload()" style="background: #6b7280; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                        <i class="fas fa-redo"></i> Reload Page
+                    </button>
                 </div>
-            `;
-        }
+            </div>
+        `;
         
-        showNotification('Error loading products. Please refresh the page or try again later.', 'error');
+        // Also try to show notification if function exists
+        if (typeof showNotification === 'function') {
+            showNotification('Failed to load products. Please try again.', 'error');
+        }
     }
 }
 
