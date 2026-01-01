@@ -1,0 +1,22 @@
+[
+  {
+    "name": "audio equpment",
+    "description": "Headphones, earbuds, and speakers",
+    "parent_id": null
+  },
+  {
+    "name": "Cases & Protection",
+    "description": "Phone cases and screen protectors",
+    "parent_id": null
+  },
+  {
+    "name": "Charging",
+    "description": "Chargers and power banks",
+    "parent_id": null
+  },
+  {
+    "name": "Wearables",
+    "description": "Smart watches and fitness trackers",
+    "parent_id": null
+  }
+]

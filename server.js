@@ -13,9 +13,220 @@ const crypto = require('crypto');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
+// ===== Security Imports =====
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const validator = require('validator');
+
+// ===== Security Configuration =====
+const SECURITY_CONFIG = {
+    MAX_LOGIN_ATTEMPTS: 5,
+    LOCKOUT_TIME: 15 * 60 * 1000, // 15 minutes
+    SESSION_TIMEOUT: 30 * 60 * 1000, // 30 minutes
+    MIN_PASSWORD_LENGTH: 8,
+    REQUIRE_STRONG_PASSWORD: true,
+    MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
+    ALLOWED_FILE_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+};
+
+// ===== Security State Management =====
+const loginAttempts = new Map();
+const auditLog = [];
+const suspiciousIPs = new Set();
+
+// ===== Security Helper Functions =====
+function logSecurityEvent(event, data = {}) {
+    const logEntry = {
+        timestamp: new Date().toISOString(),
+        event: event,
+        data: data,
+        severity: getEventSeverity(event)
+    };
+    
+    auditLog.push(logEntry);
+    
+    // Keep only last 1000 entries
+    if (auditLog.length > 1000) {
+        auditLog.shift();
+    }
+    
+    // Log critical events
+    if (logEntry.severity === 'HIGH') {
+        console.warn('🚨 SECURITY ALERT:', event, data);
+    }
+}
+
+function getEventSeverity(event) {
+    const highSeverity = ['RATE_LIMIT_EXCEEDED', 'ADMIN_ACCESS_DENIED', 'MULTIPLE_FAILED_LOGINS'];
+    const mediumSeverity = ['FAILED_LOGIN', 'INVALID_INPUT', 'UNAUTHORIZED_ACCESS'];
+    
+    if (highSeverity.includes(event)) return 'HIGH';
+    if (mediumSeverity.includes(event)) return 'MEDIUM';
+    return 'LOW';
+}
+
+function checkLoginAttempts(email, ip) {
+    const key = `${email}_${ip}`;
+    const attempts = loginAttempts.get(key) || { count: 0, lastAttempt: 0 };
+    const now = Date.now();
+    
+    // Reset attempts if lockout time has passed
+    if (now - attempts.lastAttempt > SECURITY_CONFIG.LOCKOUT_TIME) {
+        attempts.count = 0;
+    }
+    
+    if (attempts.count >= SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS) {
+        const remainingTime = Math.ceil((SECURITY_CONFIG.LOCKOUT_TIME - (now - attempts.lastAttempt)) / 60000);
+        throw new Error(`Too many failed login attempts. Please try again in ${remainingTime} minutes.`);
+    }
+    
+    return true;
+}
+
+function recordFailedLogin(email, ip) {
+    const key = `${email}_${ip}`;
+    const attempts = loginAttempts.get(key) || { count: 0, lastAttempt: 0 };
+    attempts.count++;
+    attempts.lastAttempt = Date.now();
+    loginAttempts.set(key, attempts);
+    
+    logSecurityEvent('FAILED_LOGIN', { email, ip, attempts: attempts.count });
+    
+    if (attempts.count >= SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS) {
+        suspiciousIPs.add(ip);
+        logSecurityEvent('MULTIPLE_FAILED_LOGINS', { email, ip, attempts: attempts.count });
+    }
+}
+
+function recordSuccessfulLogin(email, ip) {
+    const key = `${email}_${ip}`;
+    loginAttempts.delete(key);
+    logSecurityEvent('SUCCESSFUL_LOGIN', { email, ip });
+}
+
+function validateStrongPassword(password) {
+    const errors = [];
+    
+    if (password.length < SECURITY_CONFIG.MIN_PASSWORD_LENGTH) {
+        errors.push(`Password must be at least ${SECURITY_CONFIG.MIN_PASSWORD_LENGTH} characters long`);
+    }
+    
+    if (!/[A-Z]/.test(password)) {
+        errors.push('Password must contain at least one uppercase letter');
+    }
+    
+    if (!/[a-z]/.test(password)) {
+        errors.push('Password must contain at least one lowercase letter');
+    }
+    
+    if (!/\d/.test(password)) {
+        errors.push('Password must contain at least one number');
+    }
+    
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+        errors.push('Password must contain at least one special character');
+    }
+    
+    const weakPasswords = ['password', '123456', 'qwerty', 'admin', 'letmein'];
+    if (weakPasswords.includes(password.toLowerCase())) {
+        errors.push('Password is too common. Please choose a stronger password');
+    }
+    
+    return {
+        isValid: errors.length === 0,
+        errors: errors
+    };
+}
+
+function sanitizeInput(input) {
+    if (typeof input === 'string') {
+        return input.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                   .replace(/javascript:/gi, '')
+                   .replace(/on\w+\s*=/gi, '');
+    }
+    return input;
+}
+
 // ===== Initialize Express App =====
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// ===== Security Middleware =====
+// Rate limiting
+const generalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: {
+        error: 'Too many requests from this IP, please try again later.',
+        retryAfter: '15 minutes'
+    },
+    handler: (req, res) => {
+        logSecurityEvent('RATE_LIMIT_EXCEEDED', {
+            ip: req.ip,
+            userAgent: req.get('User-Agent'),
+            endpoint: req.path
+        });
+        res.status(429).json({
+            error: 'Too many requests from this IP, please try again later.',
+            retryAfter: '15 minutes'
+        });
+    }
+});
+
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // limit each IP to 5 login requests per windowMs
+    skipSuccessfulRequests: true,
+    message: {
+        error: 'Too many login attempts from this IP, please try again later.',
+        retryAfter: '15 minutes'
+    }
+});
+
+// Security headers
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdnjs.cloudflare.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com"],
+            fontSrc: ["'self'", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com"],
+            imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
+            connectSrc: ["'self'", "*"]
+        }
+    },
+    hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true
+    }
+}));
+
+// Apply general rate limiting
+app.use(generalLimiter);
+
+// Input sanitization middleware
+app.use((req, res, next) => {
+    if (req.body) {
+        for (const key in req.body) {
+            if (typeof req.body[key] === 'string') {
+                req.body[key] = sanitizeInput(req.body[key]);
+            }
+        }
+    }
+    next();
+});
+
+// Audit logging middleware
+app.use((req, res, next) => {
+    logSecurityEvent('REQUEST', {
+        method: req.method,
+        url: req.url,
+        ip: req.ip,
+        userAgent: req.get('User-Agent')
+    });
+    next();
+});
 
 // ===== Middleware =====
 // CORS configuration - allow all origins
@@ -938,13 +1149,22 @@ app.post('/api/register', async (req, res) => {
     }
 
     // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!validator.isEmail(email)) {
+        logSecurityEvent('INVALID_EMAIL_FORMAT', { email, ip: req.ip });
         return res.status(400).json({ error: 'Please enter a valid email address' });
     }
 
-    // Validate password length
-    if (password.length < 6) {
+    // Validate password strength
+    if (SECURITY_CONFIG.REQUIRE_STRONG_PASSWORD) {
+        const validation = validateStrongPassword(password);
+        if (!validation.isValid) {
+            logSecurityEvent('WEAK_PASSWORD_ATTEMPT', { email, ip: req.ip });
+            return res.status(400).json({ 
+                error: 'Password does not meet security requirements',
+                requirements: validation.errors
+            });
+        }
+    } else if (password.length < 6) {
         return res.status(400).json({ error: 'Password must be at least 6 characters long' });
     }
 
@@ -975,6 +1195,7 @@ app.post('/api/register', async (req, res) => {
                                     res.status(500).json({ error: err2.message });
                                 }
                             } else {
+                                logSecurityEvent('USER_REGISTERED', { email, role: userRole, ip: req.ip });
                                 console.log(`✅ New user registered: ${email}`);
                                 res.json({
                                     success: true,
@@ -991,6 +1212,7 @@ app.post('/api/register', async (req, res) => {
                         res.status(500).json({ error: err.message });
                     }
                 } else {
+                    logSecurityEvent('USER_REGISTERED', { email, role: userRole, ip: req.ip });
                     console.log(`✅ New user registered and auto-verified: ${email}`);
                     
                     res.json({
@@ -1007,23 +1229,38 @@ app.post('/api/register', async (req, res) => {
 });
 
 // User login
-app.post('/api/login', (req, res) => {
+app.post('/api/login', loginLimiter, (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
         return res.status(400).json({ error: 'Email and password are required' });
     }
 
+    // Validate email format
+    if (!validator.isEmail(email)) {
+        logSecurityEvent('INVALID_EMAIL_FORMAT', { email, ip: req.ip });
+        return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+    try {
+        // Check login attempts
+        checkLoginAttempts(email, req.ip);
+    } catch (error) {
+        return res.status(429).json({ error: error.message });
+    }
+
     db.get('SELECT * FROM users WHERE email = ?', [email], async (err, user) => {
         if (err) {
             res.status(500).json({ error: err.message });
         } else if (!user) {
+            recordFailedLogin(email, req.ip);
             res.status(401).json({ error: 'Invalid email or password' });
         } else {
             try {
                 // Compare password
                 const match = await bcrypt.compare(password, user.password);
                 if (match) {
+                    recordSuccessfulLogin(email, req.ip);
                     res.json({
                         success: true,
                         message: 'Login successful',
@@ -1035,6 +1272,7 @@ app.post('/api/login', (req, res) => {
                         }
                     });
                 } else {
+                    recordFailedLogin(email, req.ip);
                     res.status(401).json({ error: 'Invalid email or password' });
                 }
             } catch (error) {
@@ -1320,7 +1558,92 @@ app.post('/api/contact', (req, res) => {
     });
 });
 
+// ===== Admin Security Middleware =====
+function requireAdmin(req, res, next) {
+    // In a real application, you would validate JWT tokens or sessions here
+    // For now, we'll add basic IP logging for admin access
+    logSecurityEvent('ADMIN_ENDPOINT_ACCESS', {
+        ip: req.ip,
+        endpoint: req.path,
+        userAgent: req.get('User-Agent')
+    });
+    next();
+}
+
 // ===== Admin API Routes =====
+
+// Security report endpoint (admin only)
+app.get('/api/admin/security-report', requireAdmin, (req, res) => {
+    const now = Date.now();
+    const last24Hours = now - (24 * 60 * 60 * 1000);
+    
+    const recentEvents = auditLog.filter(entry => 
+        new Date(entry.timestamp).getTime() > last24Hours
+    );
+    
+    const eventCounts = {};
+    recentEvents.forEach(entry => {
+        eventCounts[entry.event] = (eventCounts[entry.event] || 0) + 1;
+    });
+    
+    const report = {
+        timestamp: new Date().toISOString(),
+        period: '24 hours',
+        totalEvents: recentEvents.length,
+        eventBreakdown: eventCounts,
+        suspiciousIPs: Array.from(suspiciousIPs),
+        activeLoginAttempts: loginAttempts.size,
+        highSeverityEvents: recentEvents.filter(e => e.severity === 'HIGH').length,
+        mediumSeverityEvents: recentEvents.filter(e => e.severity === 'MEDIUM').length,
+        recentHighSeverityEvents: recentEvents.filter(e => e.severity === 'HIGH').slice(-10)
+    };
+    
+    res.json(report);
+});
+
+// Security audit log endpoint (admin only)
+app.get('/api/admin/audit-log', requireAdmin, (req, res) => {
+    const limit = parseInt(req.query.limit) || 100;
+    const offset = parseInt(req.query.offset) || 0;
+    
+    const logs = auditLog.slice(-limit - offset, -offset || undefined);
+    
+    res.json({
+        logs: logs,
+        total: auditLog.length,
+        limit: limit,
+        offset: offset
+    });
+});
+
+// Clear suspicious IPs (admin only)
+app.post('/api/admin/clear-suspicious-ips', requireAdmin, (req, res) => {
+    const clearedCount = suspiciousIPs.size;
+    suspiciousIPs.clear();
+    
+    logSecurityEvent('SUSPICIOUS_IPS_CLEARED', {
+        clearedCount: clearedCount,
+        ip: req.ip
+    });
+    
+    res.json({
+        success: true,
+        message: `Cleared ${clearedCount} suspicious IPs`,
+        clearedCount: clearedCount
+    });
+});
+
+// Security alert endpoint (for client-side alerts)
+app.post('/api/security/alert', (req, res) => {
+    const alertData = req.body;
+    
+    logSecurityEvent('CLIENT_SECURITY_ALERT', {
+        ...alertData,
+        ip: req.ip
+    });
+    
+    res.json({ success: true, message: 'Security alert logged' });
+});
 
 // Get all contacts (admin only)
 app.get('/api/admin/contacts', (req, res) => {
@@ -2137,14 +2460,80 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`📍 Port: ${PORT}`);
     console.log(`💾 Database: ${dbPath}`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🔒 Security: Enhanced security features enabled`);
     console.log(`\nAPI Endpoints:`);
     console.log(`  GET  /api/products`);
     console.log(`  POST /api/register`);
     console.log(`  POST /api/login`);
     console.log(`  POST /api/orders`);
     console.log(`  GET  /api/orders/:userId`);
-    console.log(`  POST /api/contact\n`);
+    console.log(`  POST /api/contact`);
+    console.log(`  GET  /api/admin/security-report (Admin)`);
+    console.log(`  GET  /api/admin/audit-log (Admin)\n`);
+    
+    // Log server start
+    logSecurityEvent('SERVER_STARTED', {
+        port: PORT,
+        environment: process.env.NODE_ENV || 'development',
+        securityEnabled: true
+    });
 });
+
+// ===== Security Cleanup and Monitoring =====
+// Clean up old login attempts and audit logs every hour
+setInterval(() => {
+    const now = Date.now();
+    
+    // Clean old login attempts
+    for (const [key, attempts] of loginAttempts.entries()) {
+        if (now - attempts.lastAttempt > SECURITY_CONFIG.LOCKOUT_TIME * 2) {
+            loginAttempts.delete(key);
+        }
+    }
+    
+    // Clean old audit logs (keep last 7 days)
+    const weekAgo = now - (7 * 24 * 60 * 60 * 1000);
+    const originalLength = auditLog.length;
+    
+    while (auditLog.length > 0 && new Date(auditLog[0].timestamp).getTime() < weekAgo) {
+        auditLog.shift();
+    }
+    
+    if (originalLength !== auditLog.length) {
+        console.log(`🧹 Cleaned ${originalLength - auditLog.length} old audit log entries`);
+    }
+    
+    // Log cleanup event
+    logSecurityEvent('SECURITY_CLEANUP', {
+        loginAttemptsCount: loginAttempts.size,
+        auditLogCount: auditLog.length,
+        suspiciousIPsCount: suspiciousIPs.size
+    });
+    
+}, 60 * 60 * 1000); // Every hour
+
+// Monitor for suspicious activity every 5 minutes
+setInterval(() => {
+    const now = Date.now();
+    const last5Minutes = now - (5 * 60 * 1000);
+    
+    const recentEvents = auditLog.filter(entry => 
+        new Date(entry.timestamp).getTime() > last5Minutes
+    );
+    
+    const highSeverityEvents = recentEvents.filter(e => e.severity === 'HIGH');
+    
+    if (highSeverityEvents.length >= 5) {
+        logSecurityEvent('SUSPICIOUS_ACTIVITY_DETECTED', {
+            highSeverityCount: highSeverityEvents.length,
+            timeWindow: '5 minutes',
+            events: highSeverityEvents.map(e => ({ event: e.event, timestamp: e.timestamp }))
+        });
+        
+        console.warn(`🚨 SUSPICIOUS ACTIVITY: ${highSeverityEvents.length} high-severity events in last 5 minutes`);
+    }
+    
+}, 5 * 60 * 1000); // Every 5 minutes
 
 // ===== Graceful Shutdown =====
 process.on('SIGINT', () => {

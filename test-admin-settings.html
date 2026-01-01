@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Admin Settings</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Admin Settings Debug Tool</h1>
+
+    <div class="test-section">
+        <h2>Test 1: Check if Settings Section Exists</h2>
+        <button onclick="checkSettingsSection()">Check Settings HTML</button>
+        <div id="result1" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Check Settings CSS</h2>
+        <button onclick="checkSettingsCSS()">Check CSS Loaded</button>
+        <div id="result2" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: Load Current Location URL</h2>
+        <button onclick="loadLocationURL()">Load from API</button>
+        <div id="result3" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 4: Test Save Location</h2>
+        <input type="url" id="testLocationURL" placeholder="https://maps.google.com/?q=Test" style="width: 100%; padding: 8px; margin: 10px 0;">
+        <button onclick="testSaveLocation()">Test Save</button>
+        <div id="result4" class="result"></div>
+    </div>
+
+    <script>
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000/api' 
+            : `${window.location.origin}/api`;
+
+        function checkSettingsSection() {
+            const result = document.getElementById('result1');
+            
+            // Check if settings section exists in admin.html
+            fetch('/admin.html')
+                .then(res => res.text())
+                .then(html => {
+                    const hasSettingsNav = html.includes('data-section="settings"');
+                    const hasSettingsSection = html.includes('id="settings"');
+                    const hasLocationForm = html.includes('id="locationSettingsForm"');
+                    
+                    result.textContent = `
+Settings Navigation: ${hasSettingsNav ? '✅ Found' : '❌ Missing'}
+Settings Section: ${hasSettingsSection ? '✅ Found' : '❌ Missing'}
+Location Form: ${hasLocationForm ? '✅ Found' : '❌ Missing'}
+
+${hasSettingsNav && hasSettingsSection && hasLocationForm ? 
+'✅ All HTML elements present!' : 
+'❌ Some elements missing - check admin.html'}
+                    `;
+                })
+                .catch(err => {
+                    result.textContent = '❌ Error: ' + err.message;
+                });
+        }
+
+        function checkSettingsCSS() {
+            const result = document.getElementById('result2');
+            
+            fetch('/admin.css')
+                .then(res => res.text())
+                .then(css => {
+                    const hasSettingsContainer = css.includes('.settings-container');
+                    const hasSettingsCard = css.includes('.settings-card');
+                    const hasSettingsForm = css.includes('.settings-form');
+                    
+                    result.textContent = `
+.settings-container: ${hasSettingsContainer ? '✅ Found' : '❌ Missing'}
+.settings-card: ${hasSettingsCard ? '✅ Found' : '❌ Missing'}
+.settings-form: ${hasSettingsForm ? '✅ Found' : '❌ Missing'}
+
+${hasSettingsContainer && hasSettingsCard && hasSettingsForm ? 
+'✅ All CSS rules present!' : 
+'❌ Some CSS missing - check admin.css'}
+                    `;
+                })
+                .catch(err => {
+                    result.textContent = '❌ Error: ' + err.message;
+                });
+        }
+
+        async function loadLocationURL() {
+            const result = document.getElementById('result3');
+            result.textContent = 'Loading...';
+            
+            try {
+                const response = await fetch(`${API_URL}/settings`);
+                const data = await response.json();
+                const settings = data.settings;
+                
+                result.textContent = `
+✅ Settings loaded successfully!
+
+location_map_url: ${settings.location_map_url || '❌ Not set'}
+
+All settings:
+${JSON.stringify(settings, null, 2)}
+                `;
+            } catch (error) {
+                result.textContent = '❌ Error: ' + error.message;
+            }
+        }
+
+        async function testSaveLocation() {
+            const result = document.getElementById('result4');
+            const url = document.getElementById('testLocationURL').value;
+            
+            if (!url) {
+                result.textContent = '❌ Please enter a URL';
+                return;
+            }
+            
+            result.textContent = 'Saving...';
+            
+            try {
+                const response = await fetch(`${API_URL}/admin/settings/location_map_url`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ value: url })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    result.textContent = `✅ Success!\n\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    result.textContent = `❌ Failed: ${response.status} ${response.statusText}`;
+                }
+            } catch (error) {
+                result.textContent = '❌ Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

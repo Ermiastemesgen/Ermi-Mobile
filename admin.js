@@ -489,3 +489,240 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+// ===== Security Dashboard Functions =====
+
+async function loadSecurity() {
+    try {
+        console.log('Loading security dashboard...');
+        await refreshSecurityReport();
+    } catch (error) {
+        console.error('Error loading security dashboard:', error);
+    }
+}
+
+async function refreshSecurityReport() {
+    try {
+        const response = await fetch(`${API_URL}/admin/security-report`);
+        const report = await response.json();
+        
+        if (response.ok) {
+            updateSecurityDashboard(report);
+        } else {
+            console.error('Failed to load security report:', report);
+            showSecurityError('Failed to load security report');
+        }
+    } catch (error) {
+        console.error('Error fetching security report:', error);
+        showSecurityError('Error connecting to security service');
+    }
+}
+
+function updateSecurityDashboard(report) {
+    // Update overview cards
+    document.getElementById('totalEvents').textContent = report.totalEvents || 0;
+    document.getElementById('highSeverityEvents').textContent = report.highSeverityEvents || 0;
+    document.getElementById('suspiciousIPs').textContent = report.suspiciousIPs?.length || 0;
+    
+    // Update event breakdown
+    const eventBreakdown = document.getElementById('eventBreakdown');
+    if (report.eventBreakdown && Object.keys(report.eventBreakdown).length > 0) {
+        eventBreakdown.innerHTML = Object.entries(report.eventBreakdown)
+            .sort(([,a], [,b]) => b - a)
+            .map(([event, count]) => `
+                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #e5e7eb;">
+                    <span style="font-weight: 500;">${event.replace(/_/g, ' ')}</span>
+                    <span style="background: #3b82f6; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.8rem;">${count}</span>
+                </div>
+            `).join('');
+    } else {
+        eventBreakdown.innerHTML = '<p style="color: #6b7280; font-style: italic;">No events in the last 24 hours</p>';
+    }
+    
+    // Update recent high-severity events
+    const recentHighSeverity = document.getElementById('recentHighSeverity');
+    if (report.recentHighSeverityEvents && report.recentHighSeverityEvents.length > 0) {
+        recentHighSeverity.innerHTML = report.recentHighSeverityEvents.map(event => `
+            <div style="padding: 0.75rem; margin-bottom: 0.5rem; background: #fef2f2; border-left: 4px solid #ef4444; border-radius: 4px;">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div>
+                        <strong style="color: #dc2626;">${event.event.replace(/_/g, ' ')}</strong>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem; color: #6b7280;">
+                            ${new Date(event.timestamp).toLocaleString()}
+                        </p>
+                    </div>
+                    <span style="background: #ef4444; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.7rem;">HIGH</span>
+                </div>
+            </div>
+        `).join('');
+    } else {
+        recentHighSeverity.innerHTML = '<p style="color: #10b981; font-style: italic;">✅ No high-severity events recently</p>';
+    }
+    
+    console.log('Security dashboard updated successfully');
+}
+
+async function exportSecurityReport() {
+    try {
+        const response = await fetch(`${API_URL}/admin/security-report`);
+        const report = await response.json();
+        
+        if (response.ok) {
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `security-report-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            alert('✅ Security report exported successfully!');
+        } else {
+            alert('❌ Failed to export security report');
+        }
+    } catch (error) {
+        console.error('Error exporting security report:', error);
+        alert('❌ Error exporting security report');
+    }
+}
+
+async function clearSuspiciousIPs() {
+    if (!confirm('Are you sure you want to clear all suspicious IP addresses? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/admin/clear-suspicious-ips`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert(`✅ ${result.message}`);
+            await refreshSecurityReport();
+        } else {
+            alert('❌ Failed to clear suspicious IPs');
+        }
+    } catch (error) {
+        console.error('Error clearing suspicious IPs:', error);
+        alert('❌ Error clearing suspicious IPs');
+    }
+}
+
+async function viewAuditLog() {
+    try {
+        const response = await fetch(`${API_URL}/admin/audit-log?limit=50`);
+        const data = await response.json();
+        
+        if (response.ok) {
+            const modal = document.getElementById('auditLogModal');
+            const content = document.getElementById('auditLogContent');
+            
+            if (data.logs && data.logs.length > 0) {
+                content.innerHTML = `
+                    <div style="margin-bottom: 1rem; padding: 1rem; background: #f3f4f6; border-radius: 8px;">
+                        <strong>Showing ${data.logs.length} most recent entries (Total: ${data.total})</strong>
+                    </div>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        ${data.logs.map(log => `
+                            <div style="padding: 1rem; margin-bottom: 0.5rem; border: 1px solid #e5e7eb; border-radius: 8px; ${getSeverityStyle(log.severity)}">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                    <strong>${log.event.replace(/_/g, ' ')}</strong>
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <span style="background: ${getSeverityColor(log.severity)}; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.7rem;">
+                                            ${log.severity}
+                                        </span>
+                                        <span style="font-size: 0.8rem; color: #6b7280;">
+                                            ${new Date(log.timestamp).toLocaleString()}
+                                        </span>
+                                    </div>
+                                </div>
+                                ${log.data && Object.keys(log.data).length > 0 ? `
+                                    <details style="margin-top: 0.5rem;">
+                                        <summary style="cursor: pointer; color: #3b82f6;">View Details</summary>
+                                        <pre style="background: #f9fafb; padding: 0.5rem; border-radius: 4px; font-size: 0.8rem; margin-top: 0.5rem; overflow-x: auto;">${JSON.stringify(log.data, null, 2)}</pre>
+                                    </details>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                content.innerHTML = '<p style="text-align: center; color: #6b7280; font-style: italic;">No audit log entries found</p>';
+            }
+            
+            modal.style.display = 'block';
+        } else {
+            alert('❌ Failed to load audit log');
+        }
+    } catch (error) {
+        console.error('Error loading audit log:', error);
+        alert('❌ Error loading audit log');
+    }
+}
+
+function closeAuditLog() {
+    document.getElementById('auditLogModal').style.display = 'none';
+}
+
+function getSeverityStyle(severity) {
+    switch (severity) {
+        case 'HIGH':
+            return 'border-left: 4px solid #ef4444; background: #fef2f2;';
+        case 'MEDIUM':
+            return 'border-left: 4px solid #f59e0b; background: #fffbeb;';
+        default:
+            return 'border-left: 4px solid #10b981; background: #f0fdf4;';
+    }
+}
+
+function getSeverityColor(severity) {
+    switch (severity) {
+        case 'HIGH':
+            return '#ef4444';
+        case 'MEDIUM':
+            return '#f59e0b';
+        default:
+            return '#10b981';
+    }
+}
+
+function showSecurityError(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #ef4444;
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        z-index: 1000;
+    `;
+    errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
+    document.body.appendChild(errorDiv);
+    
+    setTimeout(() => {
+        document.body.removeChild(errorDiv);
+    }, 5000);
+}
+
+// Update the loadSectionData function to include security
+const originalLoadSectionData = loadSectionData;
+loadSectionData = async function(section) {
+    if (section === 'security') {
+        await loadSecurity();
+    } else {
+        await originalLoadSectionData(section);
+    }
+};
+
+// Auto-refresh security dashboard every 30 seconds when security section is active
+setInterval(() => {
+    const activeSection = document.querySelector('.content-section.active');
+    if (activeSection && activeSection.id === 'security') {
+        refreshSecurityReport();
+    }
+}, 30000);
