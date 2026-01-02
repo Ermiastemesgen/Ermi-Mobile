@@ -4,8 +4,9 @@
 
 /* AliExpress-Style Hero Section */
 .hero-aliexpress {
+    /* FORCE ALIEXPRESS DESIGN - ULTIMATE FIX */
     position: relative;
-    min-height: 500px;
+    min-height: 500px !important;
     display: flex;
     align-items: center;
     overflow: hidden;
@@ -27,7 +28,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #ff4757 100%);
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #ff4757 100%) !important;
     opacity: 0.9;
 }
 
