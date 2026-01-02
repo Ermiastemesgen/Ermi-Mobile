@@ -4,10 +4,17 @@ services:
     env: node
     plan: free
     buildCommand: npm install
-    startCommand: npm start
+    startCommand: node server.js
     autoDeploy: true
     branch: main
+    repo: https://github.com/YOUR_USERNAME/YOUR_REPO_NAME
     envVars:
       - key: NODE_ENV
         value: production
-    healthCheckPath: /health
+      - key: PORT
+        generateValue: true
+    healthCheckPath: /
+    disk:
+      name: ermi-mobile-disk
+      mountPath: /opt/render/project/src/uploads
+      sizeGB: 1
