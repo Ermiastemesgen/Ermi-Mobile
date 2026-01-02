@@ -1,0 +1,11 @@
+{
+  "buildTime": "2026-01-02T14:04:42.928Z",
+  "version": "2.0.0-aliexpress",
+  "features": [
+    "AliExpress-style hero section",
+    "Gradient backgrounds",
+    "Modern visual effects",
+    "Responsive design"
+  ],
+  "forceRebuild": true
+}
