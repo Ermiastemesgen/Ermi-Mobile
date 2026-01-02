@@ -305,7 +305,9 @@ async function loadProducts() {
         
         const response = await fetch('/api/products');
         if (response.ok) {
-            products = await response.json();
+            const data = await response.json();
+            // Handle both direct array and {products: array} formats
+            products = data.products || data;
             displayProducts(products);
             updateResultsCount(products.length);
         } else {
