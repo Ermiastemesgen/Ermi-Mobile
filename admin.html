@@ -23,6 +23,9 @@
             <a href="#products" class="nav-item" data-section="products">
                 <i class="fas fa-box"></i> Products
             </a>
+            <a href="#categories" class="nav-item" data-section="categories">
+                <i class="fas fa-tags"></i> Categories
+            </a>
             <a href="#orders" class="nav-item" data-section="orders">
                 <i class="fas fa-shopping-cart"></i> Orders
             </a>
@@ -119,10 +122,37 @@
                             <th>Price</th>
                             <th>Icon</th>
                             <th>Stock</th>
+                            <th>Category</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="productsTableBody">
+                        <tr><td colspan="7">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="categories" class="content-section">
+            <h2>Category Management</h2>
+            <div style="margin-bottom: 1rem;">
+                <button onclick="showAddCategoryModal()" class="btn-primary">
+                    <i class="fas fa-plus"></i> Add Category
+                </button>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Products</th>
+                            <th>Created At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categoriesTableBody">
                         <tr><td colspan="6">Loading...</td></tr>
                     </tbody>
                 </table>
@@ -327,6 +357,51 @@
                 <div class="form-actions">
                     <button type="submit" class="btn-primary">Save Changes</button>
                     <button type="button" class="btn-secondary" onclick="closeEditModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div id="addCategoryModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddCategoryModal()">&times;</span>
+            <h2>Add New Category</h2>
+            <form id="addCategoryForm">
+                <div class="form-group">
+                    <label>Category Name:</label>
+                    <input type="text" id="addCategoryName" required>
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <textarea id="addCategoryDescription" rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Add Category</button>
+                    <button type="button" class="btn-secondary" onclick="closeAddCategoryModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Category Modal -->
+    <div id="editCategoryModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditCategoryModal()">&times;</span>
+            <h2>Edit Category</h2>
+            <form id="editCategoryForm">
+                <input type="hidden" id="editCategoryId">
+                <div class="form-group">
+                    <label>Category Name:</label>
+                    <input type="text" id="editCategoryName" required>
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <textarea id="editCategoryDescription" rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                    <button type="button" class="btn-secondary" onclick="closeEditCategoryModal()">Cancel</button>
                 </div>
             </form>
         </div>

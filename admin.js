@@ -60,6 +60,9 @@ async function loadSectionData(section) {
         case 'products':
             await loadProducts();
             break;
+        case 'categories':
+            await loadCategories();
+            break;
         case 'orders':
             await loadOrders();
             break;
@@ -169,6 +172,16 @@ async function loadProducts() {
         const data = await response.json();
         console.log('Products data:', data);
         
+        // Also load categories for display
+        const categoriesResponse = await fetch(`${API_URL}/categories`);
+        const categoriesData = await categoriesResponse.json();
+        const categories = {};
+        if (categoriesData.categories) {
+            categoriesData.categories.forEach(cat => {
+                categories[cat.id] = cat.name;
+            });
+        }
+        
         const tbody = document.getElementById('productsTableBody');
         
         if (data.products && data.products.length > 0) {
@@ -179,6 +192,7 @@ async function loadProducts() {
                     <td>${product.price.toFixed(2)}</td>
                     <td><i class="fas ${product.icon}"></i></td>
                     <td>${product.stock || 100}</td>
+                    <td>${categories[product.category_id] || 'Uncategorized'}</td>
                     <td>
                         <button onclick="editProduct(${product.id})" class="btn-small btn-primary">Edit</button>
                         <button onclick="deleteProduct(${product.id})" class="btn-small btn-danger">Delete</button>
@@ -187,12 +201,59 @@ async function loadProducts() {
             `).join('');
             console.log('Products table updated with', data.products.length, 'products');
         } else {
-            tbody.innerHTML = '<tr><td colspan="6">No products found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7">No products found</td></tr>';
         }
     } catch (error) {
         console.error('Error loading products:', error);
         document.getElementById('productsTableBody').innerHTML = 
-            '<tr><td colspan="6">Error: ' + error.message + '</td></tr>';
+            '<tr><td colspan="7">Error: ' + error.message + '</td></tr>';
+    }
+}
+
+async function loadCategories() {
+    try {
+        console.log('Loading categories...');
+        const response = await fetch(`${API_URL}/categories`);
+        const data = await response.json();
+        console.log('Categories data:', data);
+        
+        const tbody = document.getElementById('categoriesTableBody');
+        
+        if (data.categories && data.categories.length > 0) {
+            // Get product counts for each category
+            const productsResponse = await fetch(`${API_URL}/products`);
+            const productsData = await productsResponse.json();
+            const productCounts = {};
+            
+            if (productsData.products) {
+                productsData.products.forEach(product => {
+                    if (product.category_id) {
+                        productCounts[product.category_id] = (productCounts[product.category_id] || 0) + 1;
+                    }
+                });
+            }
+            
+            tbody.innerHTML = data.categories.map(category => `
+                <tr>
+                    <td>${category.id}</td>
+                    <td>${category.name}</td>
+                    <td>${category.description || ''}</td>
+                    <td>${productCounts[category.id] || 0}</td>
+                    <td>${new Date(category.created_at).toLocaleDateString()}</td>
+                    <td>
+                        <button onclick="editCategory(${category.id})" class="btn-small btn-primary">Edit</button>
+                        <button onclick="deleteCategory(${category.id}, '${category.name}')" class="btn-small btn-danger">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+            console.log('Categories table updated with', data.categories.length, 'categories');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="6">No categories found</td></tr>';
+        }
+    } catch (error) {
+        console.error('Error loading categories:', error);
+        document.getElementById('categoriesTableBody').innerHTML = 
+            '<tr><td colspan="6">Error loading categories. Please check if the server is running.</td></tr>';
     }
 }
 
@@ -456,6 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadDashboard();
     loadUsers();
     loadProducts();
+    loadCategories();
     loadOrders();
 });
 
@@ -753,3 +815,140 @@ setInterval(() => {
         refreshSecurityReport();
     }
 }, 30000);
+
+// ===== Category Management Functions =====
+
+function showAddCategoryModal() {
+    document.getElementById('addCategoryModal').style.display = 'block';
+    document.getElementById('addCategoryName').value = '';
+    document.getElementById('addCategoryDescription').value = '';
+}
+
+function closeAddCategoryModal() {
+    document.getElementById('addCategoryModal').style.display = 'none';
+}
+
+async function editCategory(categoryId) {
+    try {
+        const response = await fetch(`${API_URL}/categories`);
+        const data = await response.json();
+        const category = data.categories.find(cat => cat.id === categoryId);
+        
+        if (category) {
+            document.getElementById('editCategoryId').value = category.id;
+            document.getElementById('editCategoryName').value = category.name;
+            document.getElementById('editCategoryDescription').value = category.description || '';
+            document.getElementById('editCategoryModal').style.display = 'block';
+        } else {
+            alert('Category not found');
+        }
+    } catch (error) {
+        console.error('Error loading category:', error);
+        alert('Error loading category: ' + error.message);
+    }
+}
+
+function closeEditCategoryModal() {
+    document.getElementById('editCategoryModal').style.display = 'none';
+}
+
+async function deleteCategory(categoryId, categoryName) {
+    if (!confirm(`Are you sure you want to delete the category "${categoryName}"? This action cannot be undone.`)) return;
+    
+    try {
+        const response = await fetch(`${API_URL}/admin/categories/${categoryId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert('Category deleted successfully!');
+            loadCategories();
+            loadProducts(); // Refresh products to update category display
+        } else {
+            alert('Failed to delete category: ' + (result.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error deleting category:', error);
+        alert('Error: ' + error.message);
+    }
+}
+
+// Handle add category form submission
+document.addEventListener('DOMContentLoaded', () => {
+    const addCategoryForm = document.getElementById('addCategoryForm');
+    if (addCategoryForm) {
+        addCategoryForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const categoryData = {
+                name: document.getElementById('addCategoryName').value,
+                description: document.getElementById('addCategoryDescription').value
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/admin/categories`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(categoryData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('Category added successfully!');
+                    closeAddCategoryModal();
+                    loadCategories();
+                } else {
+                    alert('Failed to add category: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error adding category:', error);
+                alert('Error: ' + error.message);
+            }
+        });
+    }
+    
+    const editCategoryForm = document.getElementById('editCategoryForm');
+    if (editCategoryForm) {
+        editCategoryForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const categoryId = document.getElementById('editCategoryId').value;
+            const categoryData = {
+                name: document.getElementById('editCategoryName').value,
+                description: document.getElementById('editCategoryDescription').value
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/admin/categories/${categoryId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(categoryData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('Category updated successfully!');
+                    closeEditCategoryModal();
+                    loadCategories();
+                    loadProducts(); // Refresh products to update category display
+                } else {
+                    alert('Failed to update category: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error updating category:', error);
+                alert('Error: ' + error.message);
+            }
+        });
+    }
+});
+
+// Make functions globally available
+window.showAddCategoryModal = showAddCategoryModal;
+window.closeAddCategoryModal = closeAddCategoryModal;
+window.editCategory = editCategory;
+window.closeEditCategoryModal = closeEditCategoryModal;
+window.deleteCategory = deleteCategory;

@@ -61,7 +61,9 @@ function initializeDatabase() {
             icon TEXT NOT NULL,
             description TEXT,
             stock INTEGER DEFAULT 100,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            category_id INTEGER,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (category_id) REFERENCES categories(id)
         )`, (err) => {
             if (err) console.error('Products table error:', err);
             else console.log('✅ Products table ready');
@@ -76,6 +78,17 @@ function initializeDatabase() {
         )`, (err) => {
             if (err) console.error('Settings table error:', err);
             else console.log('✅ Settings table ready');
+        });
+
+        // Categories table
+        db.run(`CREATE TABLE IF NOT EXISTS categories (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE NOT NULL,
+            description TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`, (err) => {
+            if (err) console.error('Categories table error:', err);
+            else console.log('✅ Categories table ready');
         });
 
         // Contacts table
@@ -121,31 +134,61 @@ function createAdminUser() {
 }
 
 function createSampleData() {
-    // Sample products
+    // First create sample categories
+    const categories = [
+        { name: 'Audio', description: 'Headphones, speakers, and audio accessories' },
+        { name: 'Charging', description: 'Chargers, cables, and power banks' },
+        { name: 'Protection', description: 'Cases, screen protectors, and covers' },
+        { name: 'Accessories', description: 'General mobile accessories and gadgets' }
+    ];
+
+    db.get('SELECT COUNT(*) as count FROM categories', [], (err, row) => {
+        if (!err && row.count === 0) {
+            const stmt = db.prepare('INSERT INTO categories (name, description) VALUES (?, ?)');
+            categories.forEach(category => {
+                stmt.run(category.name, category.description);
+            });
+            stmt.finalize(() => {
+                console.log(`✅ Created ${categories.length} sample categories`);
+                createSampleProducts(); // Create products after categories
+            });
+        } else {
+            createSampleProducts(); // Categories exist, just create products
+        }
+    });
+}
+
+function createSampleProducts() {
+    // Sample products with category assignments
     const products = [
-        { name: 'Wireless Earbuds Pro', price: 2500, icon: '🎧', description: 'Premium wireless earbuds with noise cancellation' },
-        { name: 'Fast Charger 65W', price: 800, icon: '⚡', description: 'Ultra-fast charging adapter for all devices' },
-        { name: 'Phone Case Premium', price: 450, icon: '📱', description: 'Durable protection for your smartphone' },
-        { name: 'Power Bank 20000mAh', price: 1200, icon: '🔋', description: 'High-capacity portable charger' },
-        { name: 'Bluetooth Speaker', price: 1800, icon: '🔊', description: 'Portable speaker with excellent sound quality' },
-        { name: 'Wireless Mouse', price: 600, icon: '🖱️', description: 'Ergonomic wireless mouse for productivity' },
-        { name: 'USB-C Cable', price: 200, icon: '🔌', description: 'High-speed USB-C charging cable' },
-        { name: 'Screen Protector', price: 150, icon: '🛡️', description: 'Tempered glass screen protection' },
-        { name: 'Car Mount', price: 350, icon: '🚗', description: 'Secure phone mount for vehicles' }
+        { name: 'Wireless Earbuds Pro', price: 2500, icon: '🎧', description: 'Premium wireless earbuds with noise cancellation', category_id: 1 },
+        { name: 'Fast Charger 65W', price: 800, icon: '⚡', description: 'Ultra-fast charging adapter for all devices', category_id: 2 },
+        { name: 'Phone Case Premium', price: 450, icon: '📱', description: 'Durable protection for your smartphone', category_id: 3 },
+        { name: 'Power Bank 20000mAh', price: 1200, icon: '🔋', description: 'High-capacity portable charger', category_id: 2 },
+        { name: 'Bluetooth Speaker', price: 1800, icon: '🔊', description: 'Portable speaker with excellent sound quality', category_id: 1 },
+        { name: 'Wireless Mouse', price: 600, icon: '🖱️', description: 'Ergonomic wireless mouse for productivity', category_id: 4 },
+        { name: 'USB-C Cable', price: 200, icon: '🔌', description: 'High-speed USB-C charging cable', category_id: 2 },
+        { name: 'Screen Protector', price: 150, icon: '🛡️', description: 'Tempered glass screen protection', category_id: 3 },
+        { name: 'Car Mount', price: 350, icon: '🚗', description: 'Secure phone mount for vehicles', category_id: 4 }
     ];
 
     db.get('SELECT COUNT(*) as count FROM products', [], (err, row) => {
         if (!err && row.count === 0) {
-            const stmt = db.prepare('INSERT INTO products (name, price, icon, description, stock) VALUES (?, ?, ?, ?, 100)');
+            const stmt = db.prepare('INSERT INTO products (name, price, icon, description, stock, category_id) VALUES (?, ?, ?, ?, 100, ?)');
             products.forEach(product => {
-                stmt.run(product.name, product.price, product.icon, product.description);
+                stmt.run(product.name, product.price, product.icon, product.description, product.category_id);
             });
             stmt.finalize(() => {
                 console.log(`✅ Created ${products.length} sample products`);
+                createSampleSettings(); // Create settings after products
             });
+        } else {
+            createSampleSettings(); // Products exist, just create settings
         }
     });
+}
 
+function createSampleSettings() {
     // Sample settings
     const settings = [
         { key: 'about_text', value: 'Welcome to Ermi Mobile, your one-stop destination for premium mobile accessories. We pride ourselves on offering high-quality products at competitive prices. From the latest wireless earbuds to durable phone cases and fast chargers, we have everything you need to enhance your mobile experience.' },
@@ -206,6 +249,122 @@ app.get('/api/settings', (req, res) => {
             console.log(`✅ Returning ${rows.length} settings`);
             res.json({ settings });
         }
+    });
+});
+
+// Categories API
+app.get('/api/categories', (req, res) => {
+    console.log('📡 GET /api/categories');
+    
+    db.all('SELECT * FROM categories ORDER BY name', [], (err, rows) => {
+        if (err) {
+            console.error('❌ Categories error:', err.message);
+            res.status(500).json({ error: err.message });
+        } else {
+            console.log(`✅ Returning ${rows.length} categories`);
+            res.json({ categories: rows });
+        }
+    });
+});
+
+// Admin Categories API
+app.post('/api/admin/categories', (req, res) => {
+    console.log('📡 POST /api/admin/categories');
+    const { name, description } = req.body;
+
+    if (!name) {
+        return res.status(400).json({ error: 'Category name is required' });
+    }
+
+    db.run('INSERT INTO categories (name, description) VALUES (?, ?)', 
+        [name, description || ''], function(err) {
+        if (err) {
+            if (err.message.includes('UNIQUE constraint failed')) {
+                res.status(409).json({ error: 'Category name already exists' });
+            } else {
+                console.error('❌ Category creation error:', err);
+                res.status(500).json({ error: err.message });
+            }
+        } else {
+            console.log(`✅ Category created: ${name}`);
+            res.json({
+                success: true,
+                category: {
+                    id: this.lastID,
+                    name: name,
+                    description: description || ''
+                }
+            });
+        }
+    });
+});
+
+app.put('/api/admin/categories/:id', (req, res) => {
+    console.log('📡 PUT /api/admin/categories/:id');
+    const { id } = req.params;
+    const { name, description } = req.body;
+
+    if (!name) {
+        return res.status(400).json({ error: 'Category name is required' });
+    }
+
+    db.run('UPDATE categories SET name = ?, description = ? WHERE id = ?', 
+        [name, description || '', id], function(err) {
+        if (err) {
+            if (err.message.includes('UNIQUE constraint failed')) {
+                res.status(409).json({ error: 'Category name already exists' });
+            } else {
+                console.error('❌ Category update error:', err);
+                res.status(500).json({ error: err.message });
+            }
+        } else if (this.changes === 0) {
+            res.status(404).json({ error: 'Category not found' });
+        } else {
+            console.log(`✅ Category updated: ${name}`);
+            res.json({
+                success: true,
+                category: {
+                    id: parseInt(id),
+                    name: name,
+                    description: description || ''
+                }
+            });
+        }
+    });
+});
+
+app.delete('/api/admin/categories/:id', (req, res) => {
+    console.log('📡 DELETE /api/admin/categories/:id');
+    const { id } = req.params;
+
+    // First check if any products use this category
+    db.get('SELECT COUNT(*) as count FROM products WHERE category_id = ?', [id], (err, row) => {
+        if (err) {
+            console.error('❌ Category check error:', err);
+            return res.status(500).json({ error: err.message });
+        }
+
+        if (row.count > 0) {
+            return res.status(400).json({ 
+                error: `Cannot delete category. ${row.count} products are using this category.` 
+            });
+        }
+
+        // Safe to delete category
+        db.run('DELETE FROM categories WHERE id = ?', [id], function(err) {
+            if (err) {
+                console.error('❌ Category deletion error:', err);
+                res.status(500).json({ error: err.message });
+            } else if (this.changes === 0) {
+                res.status(404).json({ error: 'Category not found' });
+            } else {
+                console.log(`✅ Category deleted: ID ${id}`);
+                res.json({
+                    success: true,
+                    message: 'Category deleted successfully'
+                });
+            }
+        });
     });
 });
 
