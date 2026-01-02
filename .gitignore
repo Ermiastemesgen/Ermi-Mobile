@@ -1,31 +1,19 @@
-# Dependencies
 node_modules/
-
-# Environment variables
 .env
-.env.local
-
-# Database (don't commit your production database)
-# emobile.db
-
-# Product exports (don't commit sample data)
-products-export.json
-
-# Uploads (user uploaded files)
-# uploads/
-
-# Logs
 *.log
-npm-debug.log*
-
-# OS files
 .DS_Store
 Thumbs.db
-
-# IDE
-.vscode/
-.idea/
-
-# Temporary files
-*.tmp
-*.temp
+emobile.db
+uploads/*.jpg
+uploads/*.png
+uploads/*.gif
+uploads/*.webp
+!uploads/.gitkeep
+*.backup.*
+*-backup.*
+test-*.html
+debug-*.js
+fix-*.js
+deploy-*.bat
+*.bat
+*.sh

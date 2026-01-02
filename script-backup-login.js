@@ -33,6 +33,7 @@ async function fetchProducts() {
         });
         
         console.log('📡 Products response status:', response.status);
+        console.log('📡 Products response headers:', response.headers);
         
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -195,56 +196,11 @@ function showNotification(message) {
     setTimeout(() => notification.remove(), 3000);
 }
 
-// ===== SEARCH FUNCTIONALITY =====
-function searchProducts() {
-    const searchInput = document.getElementById('searchInput');
-    if (!searchInput) return;
-    
-    const searchTerm = searchInput.value.toLowerCase().trim();
-    console.log('🔍 Searching for:', searchTerm);
-    
-    if (searchTerm === '') {
-        if (currentCategory === 'all') {
-            products = allProducts;
-        } else {
-            products = allProducts.filter(p => p.category_id == currentCategory);
-        }
-    } else {
-        let searchBase = currentCategory === 'all' ? allProducts : allProducts.filter(p => p.category_id == currentCategory);
-        products = searchBase.filter(product => 
-            product.name.toLowerCase().includes(searchTerm) ||
-            (product.description && product.description.toLowerCase().includes(searchTerm))
-        );
-    }
-    
-    displayProducts();
-}
-
 // ===== LOGIN SYSTEM =====
-let loginModalCreated = false;
-
-function initializeLoginSystem() {
-    console.log('🔐 Initializing login system...');
-    
+function initializeLogin() {
     const loginButton = document.getElementById('loginButton');
-    const logoutButton = document.getElementById('logoutButton');
-    
     if (loginButton) {
-        loginButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('🔐 Login button clicked!');
-            openLoginModal();
-        });
-        console.log('✅ Login button event listener added');
-    }
-    
-    if (logoutButton) {
-        logoutButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('🔐 Logout button clicked!');
-            logout();
-        });
-        console.log('✅ Logout button event listener added');
+        loginButton.addEventListener('click', openLoginModal);
     }
     
     checkUserSession();
@@ -279,7 +235,7 @@ function updateUIForLoggedInUser() {
 }
 
 function createLoginModal() {
-    if (document.getElementById('loginModal') || loginModalCreated) return;
+    if (document.getElementById('loginModal')) return;
     
     const modalHTML = `
         <div id="loginModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
@@ -353,7 +309,6 @@ function createLoginModal() {
     `;
     
     document.body.insertAdjacentHTML('beforeend', modalHTML);
-    loginModalCreated = true;
     console.log('✅ Login modal created');
 }
 
@@ -363,6 +318,11 @@ function openLoginModal() {
     if (modal) {
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
+        
+        setTimeout(() => {
+            const emailInput = document.getElementById('loginEmail');
+            if (emailInput) emailInput.focus();
+        }, 100);
     }
 }
 
@@ -372,6 +332,7 @@ function closeLoginModal() {
     if (modal) {
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
+        clearLoginForms();
     }
 }
 
@@ -395,6 +356,14 @@ function showLoginForm() {
     }
 }
 
+function clearLoginForms() {
+    const inputs = ['loginEmail', 'loginPassword', 'signupName', 'signupEmail', 'signupPhone', 'signupPassword'];
+    inputs.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) input.value = '';
+    });
+}
+
 async function handleLogin(event) {
     event.preventDefault();
     console.log('🔐 Handling login...');
@@ -403,11 +372,12 @@ async function handleLogin(event) {
     const password = document.getElementById('loginPassword').value;
     
     if (!email || !password) {
-        showNotification('Please fill in all fields');
+        showNotification('Please fill in all fields', 'error');
         return;
     }
     
     try {
+        console.log('📡 Sending login request to:', API_URL + '/login');
         const response = await fetch(API_URL + '/login', {
             method: 'POST',
             headers: {
@@ -417,7 +387,9 @@ async function handleLogin(event) {
             body: JSON.stringify({ email, password })
         });
         
+        console.log('📡 Login response status:', response.status);
         const data = await response.json();
+        console.log('📡 Login response data:', data);
         
         if (response.ok && data.user) {
             currentUser = data.user;
@@ -426,15 +398,15 @@ async function handleLogin(event) {
             updateUIForLoggedInUser();
             closeLoginModal();
             
-            showNotification(`Welcome back, ${currentUser.name || currentUser.email}!`);
+            showNotification(`Welcome back, ${currentUser.name || currentUser.email}!`, 'success');
             console.log('✅ Login successful');
         } else {
-            showNotification(data.message || 'Login failed');
+            showNotification(data.message || 'Login failed', 'error');
             console.log('❌ Login failed:', data.message);
         }
     } catch (error) {
         console.error('❌ Login error:', error);
-        showNotification('Login failed. Please try again.');
+        showNotification('Login failed. Please try again.', 'error');
     }
 }
 
@@ -448,16 +420,17 @@ async function handleSignup(event) {
     const password = document.getElementById('signupPassword').value;
     
     if (!name || !email || !phone || !password) {
-        showNotification('Please fill in all fields');
+        showNotification('Please fill in all fields', 'error');
         return;
     }
     
     if (password.length < 6) {
-        showNotification('Password must be at least 6 characters');
+        showNotification('Password must be at least 6 characters', 'error');
         return;
     }
     
     try {
+        console.log('📡 Sending signup request to:', API_URL + '/register');
         const response = await fetch(API_URL + '/register', {
             method: 'POST',
             headers: {
@@ -467,10 +440,12 @@ async function handleSignup(event) {
             body: JSON.stringify({ name, email, phone, password })
         });
         
+        console.log('📡 Signup response status:', response.status);
         const data = await response.json();
+        console.log('📡 Signup response data:', data);
         
         if (response.ok) {
-            showNotification('Account created successfully! Please login.');
+            showNotification('Account created successfully! Please login.', 'success');
             showLoginForm();
             
             const loginEmail = document.getElementById('loginEmail');
@@ -478,12 +453,12 @@ async function handleSignup(event) {
             
             console.log('✅ Signup successful');
         } else {
-            showNotification(data.message || 'Signup failed');
+            showNotification(data.message || 'Signup failed', 'error');
             console.log('❌ Signup failed:', data.message);
         }
     } catch (error) {
         console.error('❌ Signup error:', error);
-        showNotification('Signup failed. Please try again.');
+        showNotification('Signup failed. Please try again.', 'error');
     }
 }
 
@@ -504,90 +479,40 @@ function logout() {
     localStorage.removeItem('cart');
     updateCartCount();
     
-    showNotification('Logged out successfully');
+    showNotification('Logged out successfully', 'success');
     console.log('✅ Logout successful');
-}
-
-// ===== CONTACT FORM =====
-async function handleContactForm(event) {
-    event.preventDefault();
-    
-    const name = document.getElementById('contactName').value;
-    const email = document.getElementById('contactEmail').value;
-    const message = document.getElementById('contactMessage').value;
-    
-    if (!name || !email || !message) {
-        showNotification('Please fill in all fields');
-        return;
-    }
-    
-    try {
-        const response = await fetch(API_URL + '/contact', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name, email, message })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            showNotification('Message sent successfully!');
-            document.getElementById('contactForm').reset();
-        } else {
-            showNotification(data.message || 'Failed to send message');
-        }
-    } catch (error) {
-        console.error('Contact form error:', error);
-        showNotification('Failed to send message. Please try again.');
-    }
 }
 
 // ===== INITIALIZE EVERYTHING =====
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 DOM loaded, initializing everything...');
     
-    // Initialize login system
-    initializeLoginSystem();
-    
-    // Initialize search
-    const searchButton = document.getElementById('searchButton');
-    const searchInput = document.getElementById('searchInput');
-    
-    if (searchButton) {
-        searchButton.addEventListener('click', searchProducts);
-    }
-    
-    if (searchInput) {
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                searchProducts();
-            }
-        });
-    }
-    
-    // Initialize contact form
-    const contactForm = document.getElementById('contactForm');
-    if (contactForm) {
-        contactForm.addEventListener('submit', handleContactForm);
-    }
-    
-    // Update cart count
-    updateCartCount();
-    
-    // Fetch products
     setTimeout(() => {
         fetchProducts();
+        initializeLogin();
+        updateCartCount();
+        
+        // Initialize logout button
+        const logoutButton = document.getElementById('logoutButton');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', logout);
+        }
     }, 100);
 });
 
-// Make functions globally available
-window.openLoginModal = openLoginModal;
-window.closeLoginModal = closeLoginModal;
-window.showSignupForm = showSignupForm;
-window.showLoginForm = showLoginForm;
-window.filterByCategory = filterByCategory;
-window.addToCart = addToCart;
+// Close modal when clicking outside
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('loginModal');
+    if (modal && event.target === modal) {
+        closeLoginModal();
+    }
+});
+
+// Close modal on escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeLoginModal();
+    }
+});
 
 console.log('✅ Complete script loaded');

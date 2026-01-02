@@ -195,47 +195,46 @@ function showNotification(message) {
     setTimeout(() => notification.remove(), 3000);
 }
 
-// ===== SEARCH FUNCTIONALITY =====
-function searchProducts() {
-    const searchInput = document.getElementById('searchInput');
-    if (!searchInput) return;
-    
-    const searchTerm = searchInput.value.toLowerCase().trim();
-    console.log('🔍 Searching for:', searchTerm);
-    
-    if (searchTerm === '') {
-        if (currentCategory === 'all') {
-            products = allProducts;
-        } else {
-            products = allProducts.filter(p => p.category_id == currentCategory);
-        }
-    } else {
-        let searchBase = currentCategory === 'all' ? allProducts : allProducts.filter(p => p.category_id == currentCategory);
-        products = searchBase.filter(product => 
-            product.name.toLowerCase().includes(searchTerm) ||
-            (product.description && product.description.toLowerCase().includes(searchTerm))
-        );
-    }
-    
-    displayProducts();
-}
-
-// ===== LOGIN SYSTEM =====
+// ===== LOGIN SYSTEM - FIXED VERSION =====
 let loginModalCreated = false;
 
 function initializeLoginSystem() {
     console.log('🔐 Initializing login system...');
     
+    // Wait for DOM to be fully ready
+    if (document.readyState !== 'complete') {
+        setTimeout(initializeLoginSystem, 100);
+        return;
+    }
+    
     const loginButton = document.getElementById('loginButton');
     const logoutButton = document.getElementById('logoutButton');
     
+    console.log('🔍 Login button found:', !!loginButton);
+    console.log('🔍 Logout button found:', !!logoutButton);
+    
     if (loginButton) {
-        loginButton.addEventListener('click', function(e) {
+        // Remove any existing event listeners
+        loginButton.replaceWith(loginButton.cloneNode(true));
+        const newLoginButton = document.getElementById('loginButton');
+        
+        // Add click event listener
+        newLoginButton.addEventListener('click', function(e) {
             e.preventDefault();
             console.log('🔐 Login button clicked!');
             openLoginModal();
         });
-        console.log('✅ Login button event listener added');
+        
+        // Also add onclick attribute as backup
+        newLoginButton.onclick = function(e) {
+            e.preventDefault();
+            console.log('🔐 Login button onclick triggered!');
+            openLoginModal();
+        };
+        
+        console.log('✅ Login button event listeners added');
+    } else {
+        console.error('❌ Login button not found in DOM');
     }
     
     if (logoutButton) {
@@ -247,23 +246,32 @@ function initializeLoginSystem() {
         console.log('✅ Logout button event listener added');
     }
     
+    // Check if user is already logged in
     checkUserSession();
+    
+    // Create login modal
     createLoginModal();
 }
 
 function checkUserSession() {
+    console.log('🔍 Checking user session...');
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
         try {
             currentUser = JSON.parse(savedUser);
+            console.log('✅ User session found:', currentUser.email);
             updateUIForLoggedInUser();
         } catch (error) {
+            console.log('⚠️  Invalid user session, clearing...');
             localStorage.removeItem('currentUser');
         }
+    } else {
+        console.log('ℹ️  No user session found');
     }
 }
 
 function updateUIForLoggedInUser() {
+    console.log('🔄 Updating UI for logged in user...');
     const loginButton = document.getElementById('loginButton');
     const logoutButton = document.getElementById('logoutButton');
     
@@ -275,11 +283,34 @@ function updateUIForLoggedInUser() {
         if (logoutText && currentUser) {
             logoutText.textContent = currentUser.name || currentUser.email || 'Logout';
         }
+        console.log('✅ UI updated for logged in user');
+    } else {
+        console.error('❌ Login/Logout buttons not found for UI update');
+    }
+}
+
+function updateUIForLoggedOutUser() {
+    console.log('🔄 Updating UI for logged out user...');
+    const loginButton = document.getElementById('loginButton');
+    const logoutButton = document.getElementById('logoutButton');
+    
+    if (loginButton && logoutButton) {
+        loginButton.style.display = 'flex';
+        logoutButton.style.display = 'none';
+        console.log('✅ UI updated for logged out user');
+    } else {
+        console.error('❌ Login/Logout buttons not found for UI update');
     }
 }
 
 function createLoginModal() {
-    if (document.getElementById('loginModal') || loginModalCreated) return;
+    console.log('🔧 Creating login modal...');
+    
+    // Check if modal already exists
+    if (document.getElementById('loginModal') || loginModalCreated) {
+        console.log('ℹ️  Login modal already exists');
+        return;
+    }
     
     const modalHTML = `
         <div id="loginModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
@@ -354,7 +385,7 @@ function createLoginModal() {
     
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     loginModalCreated = true;
-    console.log('✅ Login modal created');
+    console.log('✅ Login modal created successfully');
 }
 
 function openLoginModal() {
@@ -363,6 +394,18 @@ function openLoginModal() {
     if (modal) {
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
+        
+        setTimeout(() => {
+            const emailInput = document.getElementById('loginEmail');
+            if (emailInput) emailInput.focus();
+        }, 100);
+        
+        console.log('✅ Login modal opened');
+    } else {
+        console.error('❌ Login modal not found');
+        // Try to create it again
+        createLoginModal();
+        setTimeout(openLoginModal, 100);
     }
 }
 
@@ -372,6 +415,8 @@ function closeLoginModal() {
     if (modal) {
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
+        clearLoginForms();
+        console.log('✅ Login modal closed');
     }
 }
 
@@ -382,6 +427,7 @@ function showSignupForm() {
     if (loginForm && signupForm) {
         loginForm.style.display = 'none';
         signupForm.style.display = 'block';
+        console.log('✅ Switched to signup form');
     }
 }
 
@@ -392,7 +438,16 @@ function showLoginForm() {
     if (loginForm && signupForm) {
         loginForm.style.display = 'block';
         signupForm.style.display = 'none';
+        console.log('✅ Switched to login form');
     }
+}
+
+function clearLoginForms() {
+    const inputs = ['loginEmail', 'loginPassword', 'signupName', 'signupEmail', 'signupPhone', 'signupPassword'];
+    inputs.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) input.value = '';
+    });
 }
 
 async function handleLogin(event) {
@@ -408,6 +463,7 @@ async function handleLogin(event) {
     }
     
     try {
+        console.log('📡 Sending login request to:', API_URL + '/login');
         const response = await fetch(API_URL + '/login', {
             method: 'POST',
             headers: {
@@ -417,7 +473,9 @@ async function handleLogin(event) {
             body: JSON.stringify({ email, password })
         });
         
+        console.log('📡 Login response status:', response.status);
         const data = await response.json();
+        console.log('📡 Login response data:', data);
         
         if (response.ok && data.user) {
             currentUser = data.user;
@@ -458,6 +516,7 @@ async function handleSignup(event) {
     }
     
     try {
+        console.log('📡 Sending signup request to:', API_URL + '/register');
         const response = await fetch(API_URL + '/register', {
             method: 'POST',
             headers: {
@@ -467,7 +526,9 @@ async function handleSignup(event) {
             body: JSON.stringify({ name, email, phone, password })
         });
         
+        console.log('📡 Signup response status:', response.status);
         const data = await response.json();
+        console.log('📡 Signup response data:', data);
         
         if (response.ok) {
             showNotification('Account created successfully! Please login.');
@@ -493,13 +554,7 @@ function logout() {
     currentUser = null;
     localStorage.removeItem('currentUser');
     
-    const loginButton = document.getElementById('loginButton');
-    const logoutButton = document.getElementById('logoutButton');
-    
-    if (loginButton && logoutButton) {
-        loginButton.style.display = 'flex';
-        logoutButton.style.display = 'none';
-    }
+    updateUIForLoggedOutUser();
     
     localStorage.removeItem('cart');
     updateCartCount();
@@ -508,86 +563,53 @@ function logout() {
     console.log('✅ Logout successful');
 }
 
-// ===== CONTACT FORM =====
-async function handleContactForm(event) {
-    event.preventDefault();
-    
-    const name = document.getElementById('contactName').value;
-    const email = document.getElementById('contactEmail').value;
-    const message = document.getElementById('contactMessage').value;
-    
-    if (!name || !email || !message) {
-        showNotification('Please fill in all fields');
-        return;
-    }
-    
-    try {
-        const response = await fetch(API_URL + '/contact', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name, email, message })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            showNotification('Message sent successfully!');
-            document.getElementById('contactForm').reset();
-        } else {
-            showNotification(data.message || 'Failed to send message');
-        }
-    } catch (error) {
-        console.error('Contact form error:', error);
-        showNotification('Failed to send message. Please try again.');
-    }
-}
-
 // ===== INITIALIZE EVERYTHING =====
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 DOM loaded, initializing everything...');
     
-    // Initialize login system
+    // Initialize immediately
     initializeLoginSystem();
-    
-    // Initialize search
-    const searchButton = document.getElementById('searchButton');
-    const searchInput = document.getElementById('searchInput');
-    
-    if (searchButton) {
-        searchButton.addEventListener('click', searchProducts);
-    }
-    
-    if (searchInput) {
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                searchProducts();
-            }
-        });
-    }
-    
-    // Initialize contact form
-    const contactForm = document.getElementById('contactForm');
-    if (contactForm) {
-        contactForm.addEventListener('submit', handleContactForm);
-    }
-    
-    // Update cart count
     updateCartCount();
     
-    // Fetch products
+    // Then fetch products
     setTimeout(() => {
         fetchProducts();
     }, 100);
 });
 
-// Make functions globally available
+// Additional initialization when window loads (backup)
+window.addEventListener('load', function() {
+    console.log('🚀 Window loaded, ensuring login system is initialized...');
+    
+    // Double-check login system initialization
+    setTimeout(() => {
+        const loginButton = document.getElementById('loginButton');
+        if (loginButton && !loginButton.onclick && !loginButton.hasAttribute('data-initialized')) {
+            console.log('🔧 Re-initializing login system...');
+            initializeLoginSystem();
+            loginButton.setAttribute('data-initialized', 'true');
+        }
+    }, 200);
+});
+
+// Close modal when clicking outside
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('loginModal');
+    if (modal && event.target === modal) {
+        closeLoginModal();
+    }
+});
+
+// Close modal on escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeLoginModal();
+    }
+});
+
+// Make functions globally available for debugging
 window.openLoginModal = openLoginModal;
 window.closeLoginModal = closeLoginModal;
-window.showSignupForm = showSignupForm;
-window.showLoginForm = showLoginForm;
-window.filterByCategory = filterByCategory;
-window.addToCart = addToCart;
+window.initializeLoginSystem = initializeLoginSystem;
 
-console.log('✅ Complete script loaded');
+console.log('✅ Complete script with fixed login button loaded');
