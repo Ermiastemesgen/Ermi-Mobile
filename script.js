@@ -301,35 +301,18 @@ function closeMobileMenu() {
 // Product functionality
 async function loadProducts() {
     try {
-        console.log('🔄 Loading products...');
         showProductSkeletons();
         
         const response = await fetch('/api/products');
-        console.log('📡 API Response status:', response.status);
-        
         if (response.ok) {
-            const data = await response.json();
-            console.log('📦 API Response data:', data);
-            
-            // Handle both formats: direct array or { products: array }
-            products = data.products || data;
-            console.log('📋 Products array:', products);
-            
-            if (Array.isArray(products)) {
-                console.log(`✅ Loaded ${products.length} products`);
-                displayProducts(products);
-                updateResultsCount(products.length);
-            } else {
-                console.error('❌ Products is not an array:', typeof products);
-                throw new Error('Invalid products data format');
-            }
+            products = await response.json();
+            displayProducts(products);
+            updateResultsCount(products.length);
         } else {
-            const errorText = await response.text();
-            console.error('❌ API Error:', response.status, errorText);
-            throw new Error(`Failed to load products: ${response.status}`);
+            throw new Error('Failed to load products');
         }
     } catch (error) {
-        console.error('❌ Error loading products:', error);
+        console.error('Error loading products:', error);
         showProductError();
     }
 }
